@@ -5,8 +5,8 @@ import lombok.Value;
 import lombok.With;
 
 @With
-@Builder
 @Value
+@Builder
 public class Gamepad {
     boolean A;
     boolean B;

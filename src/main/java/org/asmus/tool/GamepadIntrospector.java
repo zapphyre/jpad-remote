@@ -1,6 +1,7 @@
 package org.asmus.tool;
 
 import lombok.SneakyThrows;
+import lombok.Value;
 import org.asmus.model.GEvent;
 import org.asmus.model.TimedValue;
 
@@ -12,15 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+@Value
 public class GamepadIntrospector<T> {
 
     Map<String, TimedValue> values = new HashMap<>();
 
+    Function<TimedValue, TVPair> pairWithPreviousValue = q -> new TVPair(q, values.put(q.getName(), q));
     Function<PropertyDescriptor, TimedValue> toTimedValue = q -> TimedValue.builder()
                     .name(q.getName())
                     .value(q.getValue(q.getName()).toString())
                     .build();
-    Function<TimedValue, TVPair> pairWithPreviousValue = q -> new TVPair(q, values.put(q.getName(), q));
 
     @SneakyThrows
     public List<GEvent> introspect(T gamepad) {

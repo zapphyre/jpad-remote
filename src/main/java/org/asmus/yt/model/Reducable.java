@@ -1,20 +1,18 @@
 package org.asmus.yt.model;
 
+import org.asmus.function.ButtonSetter;
+import org.asmus.function.GamepadInputGroupQuery;
+
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public interface Reducable<T> {
 
     int getNum();
 
-    Function<Gamepad, Consumer<T>> getSetterFun();
+    ButtonSetter<T> getSetterFun(Gamepad gamepad);
 
-    default BiFunction<Gamepad, Reducable<T>, Gamepad> getReducer(Function<Integer, Function<Consumer<T>, Gamepad>> buttonQuery) {
-        return (gamepad, evt) -> buttonQuery.apply(evt.getNum()).apply(evt.getSetterFun().apply(gamepad));
+    default BiFunction<Gamepad, Reducable<T>, Gamepad> getReducer(GamepadInputGroupQuery<T> query) {
+        return (gamepad, evt) -> query.getValueForComponent(evt.getNum())
+                .targetReturningSetter(getSetterFun(gamepad));
     }
-//
-//    static <T> BiFunction<Gamepad, Reducable<T>, Gamepad> reducer(Function<Integer, Function<Consumer<T>, Gamepad>> buttonQuery) {
-//        return (gamepad, evt) -> buttonQuery.apply(evt.getNum()).apply(evt.getSetterFun().apply(gamepad));
-//    }
 }

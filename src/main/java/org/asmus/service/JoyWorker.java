@@ -1,10 +1,10 @@
 package org.asmus.service;
 
 import lombok.Getter;
-import org.asmus.yt.model.EAxisGamepadEvt;
-import org.asmus.yt.model.EButtonGamepadEvt;
+import org.asmus.function.GamepadInputGroupQuery;
+import org.asmus.yt.model.evt.EAxisGamepadEvt;
+import org.asmus.yt.model.evt.EButtonGamepadEvt;
 import org.asmus.yt.model.Gamepad;
-import org.asmus.yt.model.Reducable;
 import org.bbi.linuxjoy.LinuxJoystick;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -14,9 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public class JoyWorker {
 
@@ -24,11 +22,12 @@ public class JoyWorker {
     private final Sinks.Many<Gamepad> sink = Sinks.many().multicast().directBestEffort();
 
     @Getter
-    private final Flux<Gamepad> gamepads = sink.asFlux();
+    private final Flux<Gamepad> gamepads = sink.asFlux().distinctUntilChanged();
 
     BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
-    BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(Function<Integer, Function<Consumer<Boolean>, Gamepad>> buttonQuery) {
-        return (gamepad, evt) -> buttonQuery.apply(evt.getNum()).apply(evt.getSetter().apply(gamepad));
+    BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(GamepadInputGroupQuery<Boolean> buttonQuery) {
+        return (gamepad, evt) -> buttonQuery.getValueForComponent(evt.getNum())
+                .targetReturningSetter(evt.getSetter().setOn(gamepad));
     }
 
     public void hookOnJoy(String dev) {
@@ -36,8 +35,8 @@ public class JoyWorker {
 
         ForJoystick manager = new ForJoystick(gamepad);
 
-        var queryButton = manager.query(j::getButtonState);
-        var queryAxis = manager.query(j::getAxisState);
+        GamepadInputGroupQuery<Boolean> buttonStateSetor = manager.setorAbout(j::getButtonState);
+        GamepadInputGroupQuery<Integer> axisStateSetor = manager.setorAbout(j::getAxisState);
 
         j.open();
 
@@ -48,18 +47,18 @@ public class JoyWorker {
             j.poll();
 
             gamepad = Arrays.stream(EButtonGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.getReducer(queryButton).apply(q, p), laterMerger);
+                    .reduce(gamepad, (q, p) -> p.getReducer(buttonStateSetor).apply(q, p), laterMerger);
 
             gamepad = Arrays.stream(EAxisGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.getReducer(queryAxis).apply(q, p), laterMerger);
+                    .reduce(gamepad, (q, p) -> p.getReducer(axisStateSetor).apply(q, p), laterMerger);
         }
     }
 
     record ForJoystick(Gamepad gamepad) {
 
-        public <T> Function<Integer, Function<Consumer<T>, Gamepad>> query(Function<Integer, T> getter) {
+        public <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
             return pos -> setter -> {
-                setter.accept(getter.apply(pos));
+                setter.setTriggered(getter.apply(pos));
                 return gamepad;
             };
         }

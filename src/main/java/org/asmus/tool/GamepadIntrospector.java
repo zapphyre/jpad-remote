@@ -33,10 +33,6 @@ public class GamepadIntrospector<T> {
         return List.of();
     }
 
-    TVPair updateCtx(TimedValue timedValue) {
-        return new TVPair(timedValue, values.put(timedValue.getName(), timedValue));
-    }
-
     record TVPair(TimedValue first, TimedValue second) {
     }
 }

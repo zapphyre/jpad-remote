@@ -21,10 +21,9 @@ public class JoyWorker {
     private final Sinks.Many<Gamepad> sink = Sinks.many().multicast().directBestEffort();
     private Gamepad gamepad = Gamepad.builder().build();
 
-    @Getter
-    private final Flux<Gamepad> gamepadEvents = sink.asFlux().distinctUntilChanged();
 
     BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
+
     BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(GamepadInputGroupQuery<Boolean> buttonQuery) {
         return (gamepad, evt) -> buttonQuery.getValueForIndex(evt.getNum())
                 .targetReturningSetter(evt.getSetter().setOn(gamepad));
@@ -34,7 +33,7 @@ public class JoyWorker {
         return pos -> setter -> setter.setTriggered(getter.apply(pos));
     }
 
-    public void hookOnJoy(String dev) {
+    public Flux<Gamepad> hookOnJoy(String dev) {
         LinuxJoystick j = new LinuxJoystick(dev, 11, 8);
 
         GamepadInputGroupQuery<Boolean> buttonStateSetor = setorAbout(j::getButtonState);
@@ -45,14 +44,17 @@ public class JoyWorker {
         Executors.newSingleThreadScheduledExecutor()
                 .scheduleAtFixedRate(() -> sink.tryEmitNext(gamepad), 30, 20, TimeUnit.MILLISECONDS);
 
-        while (true) {
-            j.poll();
+        Executors.newSingleThreadScheduledExecutor()
+                .scheduleAtFixedRate(() -> {
+                    j.poll();
 
-            gamepad = Arrays.stream(EButtonGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.getReducer(buttonStateSetor).apply(q, p), laterMerger);
+                    gamepad = Arrays.stream(EButtonGamepadEvt.values())
+                            .reduce(gamepad, (q, p) -> p.getReducer(buttonStateSetor).apply(q, p), laterMerger);
 
-            gamepad = Arrays.stream(EAxisGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.getReducer(axisStateSetor).apply(q, p), laterMerger);
-        }
+                    gamepad = Arrays.stream(EAxisGamepadEvt.values())
+                            .reduce(gamepad, (q, p) -> p.getReducer(axisStateSetor).apply(q, p), laterMerger);
+                }, 0, 10, TimeUnit.MILLISECONDS);
+
+        return sink.asFlux().distinctUntilChanged();
     }
 }

@@ -12,10 +12,7 @@ public class Main {
     public static void main(String[] args) {
         JoyWorker joyWorker = new JoyWorker();
 
-        Executors.newSingleThreadScheduledExecutor()
-                .execute(() -> joyWorker.hookOnJoy("/dev/input/js0"));
-
-        joyWorker.getGamepadEvents()
+        joyWorker.hookOnJoy("/dev/input/js0")
                 .map(Gamepad::toString)
                 .subscribe(log::info);
     }

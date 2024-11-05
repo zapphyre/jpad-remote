@@ -26,6 +26,11 @@ public class JoyWorker {
     @Getter
     private final Flux<Gamepad> gamepads = sink.asFlux();
 
+    BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
+    BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(Function<Integer, Function<Consumer<Boolean>, Gamepad>> buttonQuery) {
+        return (gamepad, evt) -> buttonQuery.apply(evt.getNum()).apply(evt.getSetter().apply(gamepad));
+    }
+
     public void hookOnJoy(String dev) {
         LinuxJoystick j = new LinuxJoystick(dev, 11, 8);
 
@@ -35,11 +40,6 @@ public class JoyWorker {
         var queryAxis = manager.query(j::getAxisState);
 
         j.open();
-//        var query = query(gamepad);
-
-//        Function<Integer, Function<Consumer<?>, Gamepad>> queryButton = query(gamepad).apply(j::getButtonState);
-
-//        var queryAxis = query(j::getAxisState, gamepad);
 
         Executors.newSingleThreadScheduledExecutor()
                 .scheduleAtFixedRate(() -> sink.tryEmitNext(gamepad), 30, 20, TimeUnit.MILLISECONDS);
@@ -55,32 +55,9 @@ public class JoyWorker {
         }
     }
 
-    public <T> Function<Function<Integer, T>, Function<Integer, Function<Consumer<T>, Gamepad>>> query(Gamepad gpad) {
-        return getter -> pos -> setter -> {
-            setter.accept(getter.apply(pos));
-            return gpad;
-        };
-    }
-
-    //    public static <T> Function<Gamepad, Function<Integer, Function<Consumer<T>, Gamepad>>> query(Function<Integer, T> getter) {
-    public static <T> Function<Integer, Function<Consumer<T>, Gamepad>> query(Function<Integer, T> getter, Gamepad gpad) {
-        return pos -> setter -> {
-            setter.accept(getter.apply(pos));
-            return gpad;
-        };
-    }
-
-    BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
-
-    BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(Function<Integer, Function<Consumer<Boolean>, Gamepad>> buttonQuery) {
-        return (gamepad, evt) -> buttonQuery.apply(evt.getNum()).apply(evt.getSetter().apply(gamepad));
-    }
-
     record ForJoystick(Gamepad gamepad) {
 
         public <T> Function<Integer, Function<Consumer<T>, Gamepad>> query(Function<Integer, T> getter) {
-//        public <T> Function<Gamepad, Function<Integer, Function<Consumer<T>, Gamepad>>> query(Function<Integer, T> getter) {
-//        public <T> Function<Function<Integer, T>, Function<Integer, Function<Consumer<T>, Gamepad>>> query(Gamepad gpad) {
             return pos -> setter -> {
                 setter.accept(getter.apply(pos));
                 return gamepad;

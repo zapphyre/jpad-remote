@@ -11,10 +11,10 @@ import org.asmus.yt.model.Reducable;
 @RequiredArgsConstructor
 public enum EAxisGamepadEvt implements Reducable<Integer> {
 
-    LEFT_STICK_UP(0, g -> g::setDPAD_UP),
-    LEFT_STICK_DOWN(1, g -> g::setDPAD_DOWN),
-    RIGHT_STICK_LEFT(2, g -> g::setDPAD_LEFT),
-    RIGHT_STICK_RIGHT(3, g -> g::setDPAD_RIGHT),
+    LEFT_STICK_UP(0, g -> g::withDPAD_UP),
+    LEFT_STICK_DOWN(1, g -> g::withDPAD_DOWN),
+    RIGHT_STICK_LEFT(2, g -> g::withDPAD_LEFT),
+    RIGHT_STICK_RIGHT(3, g -> g::withDPAD_RIGHT),
     ;
 
     final int num;

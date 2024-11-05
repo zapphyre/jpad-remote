@@ -1,7 +1,9 @@
 package org.asmus.function;
 
+import org.asmus.yt.model.Gamepad;
+
 @FunctionalInterface
 public interface ButtonSetter<T> {
 
-    void setTriggered(T triggered);
+    Gamepad setTriggered(T triggered);
 }

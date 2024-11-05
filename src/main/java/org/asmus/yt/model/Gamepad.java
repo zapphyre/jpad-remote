@@ -1,31 +1,38 @@
 package org.asmus.yt.model;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
+import lombok.With;
 
-@Data
+@With
 @Builder
+@Value
 public class Gamepad {
-    private boolean A;
-    private boolean B;
-    private boolean X;
-    private boolean Y;
-    private boolean LEFT;
-    private boolean RIGHT;
-    private boolean UP;
-    private boolean DOWN;
-    private boolean LEFT_BUMPER;
-    private boolean RIGHT_BUMPER;
-    private boolean BACK;
-    private boolean START;
-    private int DPAD_UP;
-    private int DPAD_DOWN;
-    private int DPAD_LEFT;
-    private int DPAD_RIGHT;
-    private int DPAD_CENTER;
+    boolean A;
+    boolean B;
+    boolean X;
+    boolean Y;
 
-    private boolean DPAD_LEFT_BUMPER;
-    private boolean DPAD_RIGHT_BUMPER;
-    private boolean DPAD_LEFT_TRIGGER;
-    private boolean DPAD_RIGHT_TRIGGER;
+    boolean LEFT;
+    boolean RIGHT;
+    boolean UP;
+    boolean DOWN;
+
+    boolean LEFT_BUMPER;
+    boolean RIGHT_BUMPER;
+
+    boolean BACK;
+    boolean START;
+
+    int DPAD_UP;
+    int DPAD_DOWN;
+    int DPAD_LEFT;
+    int DPAD_RIGHT;
+    int DPAD_CENTER;
+
+    boolean DPAD_LEFT_BUMPER;
+    boolean DPAD_RIGHT_BUMPER;
+    boolean DPAD_LEFT_TRIGGER;
+    boolean DPAD_RIGHT_TRIGGER;
 }
+

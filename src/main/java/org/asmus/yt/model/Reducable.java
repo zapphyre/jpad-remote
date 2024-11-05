@@ -12,7 +12,7 @@ public interface Reducable<T> {
     ButtonSetter<T> getSetterFun(Gamepad gamepad);
 
     default BiFunction<Gamepad, Reducable<T>, Gamepad> getReducer(GamepadInputGroupQuery<T> query) {
-        return (gamepad, evt) -> query.getValueForComponent(evt.getNum())
+        return (gamepad, evt) -> query.getValueForIndex(evt.getNum())
                 .targetReturningSetter(getSetterFun(gamepad));
     }
 }

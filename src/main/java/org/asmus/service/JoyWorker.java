@@ -2,9 +2,9 @@ package org.asmus.service;
 
 import lombok.Getter;
 import org.asmus.function.GamepadInputGroupQuery;
+import org.asmus.yt.model.Gamepad;
 import org.asmus.yt.model.evt.EAxisGamepadEvt;
 import org.asmus.yt.model.evt.EButtonGamepadEvt;
-import org.asmus.yt.model.Gamepad;
 import org.bbi.linuxjoy.LinuxJoystick;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -18,25 +18,27 @@ import java.util.function.Function;
 
 public class JoyWorker {
 
-    private Gamepad gamepad = Gamepad.builder().build();
     private final Sinks.Many<Gamepad> sink = Sinks.many().multicast().directBestEffort();
+    private Gamepad gamepad = Gamepad.builder().build();
 
     @Getter
-    private final Flux<Gamepad> gamepads = sink.asFlux().distinctUntilChanged();
+    private final Flux<Gamepad> gamepadEvents = sink.asFlux().distinctUntilChanged();
 
     BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
     BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(GamepadInputGroupQuery<Boolean> buttonQuery) {
-        return (gamepad, evt) -> buttonQuery.getValueForComponent(evt.getNum())
+        return (gamepad, evt) -> buttonQuery.getValueForIndex(evt.getNum())
                 .targetReturningSetter(evt.getSetter().setOn(gamepad));
+    }
+
+    <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
+        return pos -> setter -> setter.setTriggered(getter.apply(pos));
     }
 
     public void hookOnJoy(String dev) {
         LinuxJoystick j = new LinuxJoystick(dev, 11, 8);
 
-        ForJoystick manager = new ForJoystick(gamepad);
-
-        GamepadInputGroupQuery<Boolean> buttonStateSetor = manager.setorAbout(j::getButtonState);
-        GamepadInputGroupQuery<Integer> axisStateSetor = manager.setorAbout(j::getAxisState);
+        GamepadInputGroupQuery<Boolean> buttonStateSetor = setorAbout(j::getButtonState);
+        GamepadInputGroupQuery<Integer> axisStateSetor = setorAbout(j::getAxisState);
 
         j.open();
 
@@ -51,16 +53,6 @@ public class JoyWorker {
 
             gamepad = Arrays.stream(EAxisGamepadEvt.values())
                     .reduce(gamepad, (q, p) -> p.getReducer(axisStateSetor).apply(q, p), laterMerger);
-        }
-    }
-
-    record ForJoystick(Gamepad gamepad) {
-
-        public <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
-            return pos -> setter -> {
-                setter.setTriggered(getter.apply(pos));
-                return gamepad;
-            };
         }
     }
 }

@@ -11,10 +11,10 @@ import org.asmus.yt.model.Reducable;
 @RequiredArgsConstructor
 public enum EButtonGamepadEvt implements Reducable<Boolean> {
 
-    A(0, g -> g::setA),
-    B(1, g -> g::setB),
-    X(2, g -> g::setX),
-    Y(3, g -> g::setY),
+    A(0, g -> g::withA),
+    B(1, g -> g::withB),
+    X(2, g -> g::withX),
+    Y(3, g -> g::withY),
     ;
 
     final int num;

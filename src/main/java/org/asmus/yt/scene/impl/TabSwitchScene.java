@@ -1,9 +1,9 @@
 package org.asmus.yt.scene.impl;
 
-import life.domacitempeh.mqttsensorcollector.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
+import org.asmus.yt.scene.Scene;
 
-import static life.domacitempeh.mqttsensorcollector.xDoToolUtil.*;
+import static org.asmus.yt.xDoToolUtil.*;
 
 @Slf4j
 public class TabSwitchScene extends BaseScene {

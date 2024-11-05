@@ -1,8 +1,8 @@
 package org.asmus.yt.scene.impl;
 
-import life.domacitempeh.mqttsensorcollector.scene.Scene;
-import life.domacitempeh.mqttsensorcollector.xDoToolUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.asmus.yt.scene.Scene;
+import org.asmus.yt.xDoToolUtil;
 
 import java.awt.*;
 import java.util.Map;
@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-import static life.domacitempeh.mqttsensorcollector.xDoToolUtil.*;
+import static org.asmus.yt.xDoToolUtil.*;
 
 @Slf4j
 public class NewTabScene extends BaseScene {

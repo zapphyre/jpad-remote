@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 @FunctionalInterface
-public interface GamepadInputGroupQuery {
+public interface GamepadInputGroupQuery<T> {
 
-    Function<Integer, Function<Consumer<Boolean>, Gamepad>> getValueForComponent();
+    GamepadReturningSetter<T> getValueForComponent(int index);
 }

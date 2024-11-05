@@ -2,7 +2,7 @@ package org.asmus;
 
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.service.JoyWorker;
-import org.asmus.yt.model.Gamepad;
+import org.asmus.model.Gamepad;
 import reactor.core.publisher.Flux;
 
 @Slf4j

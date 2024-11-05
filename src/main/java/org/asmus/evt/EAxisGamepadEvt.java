@@ -1,15 +1,15 @@
-package org.asmus.yt.model.evt;
+package org.asmus.evt;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.asmus.function.ButtonSetter;
 import org.asmus.function.GamepadButtonSetter;
-import org.asmus.yt.model.Gamepad;
-import org.asmus.yt.model.Reducable;
+import org.asmus.model.Reducible;
+import org.asmus.model.Gamepad;
 
 @Getter
 @RequiredArgsConstructor
-public enum EAxisGamepadEvt implements Reducable<Integer> {
+public enum EAxisGamepadEvt implements Reducible<Integer> {
 
     LEFT_STICK_UP(0, g -> g::withDPAD_UP),
     LEFT_STICK_DOWN(1, g -> g::withDPAD_DOWN),

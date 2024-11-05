@@ -1,4 +1,4 @@
-package org.asmus.yt.model;
+package org.asmus.model;
 
 import lombok.Builder;
 import lombok.Value;

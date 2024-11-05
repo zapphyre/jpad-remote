@@ -1,10 +1,9 @@
 package org.asmus.service;
 
-import lombok.Getter;
 import org.asmus.function.GamepadInputGroupQuery;
-import org.asmus.yt.model.Gamepad;
-import org.asmus.yt.model.evt.EAxisGamepadEvt;
-import org.asmus.yt.model.evt.EButtonGamepadEvt;
+import org.asmus.model.Gamepad;
+import org.asmus.evt.EAxisGamepadEvt;
+import org.asmus.evt.EButtonGamepadEvt;
 import org.bbi.linuxjoy.LinuxJoystick;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;

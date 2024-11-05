@@ -1,15 +1,15 @@
-package org.asmus.yt.model.evt;
+package org.asmus.evt;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.asmus.function.ButtonSetter;
 import org.asmus.function.GamepadButtonSetter;
-import org.asmus.yt.model.Gamepad;
-import org.asmus.yt.model.Reducable;
+import org.asmus.model.Gamepad;
+import org.asmus.model.Reducible;
 
 @Getter
 @RequiredArgsConstructor
-public enum EButtonGamepadEvt implements Reducable<Boolean> {
+public enum EButtonGamepadEvt implements Reducible<Boolean> {
 
     A(0, g -> g::withA),
     B(1, g -> g::withB),

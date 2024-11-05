@@ -1,6 +1,6 @@
 package org.asmus.function;
 
-import org.asmus.yt.model.Gamepad;
+import org.asmus.model.Gamepad;
 
 @FunctionalInterface
 public interface GamepadButtonSetter<T> {

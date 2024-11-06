@@ -7,6 +7,9 @@ import org.asmus.tool.GamepadIntrospector;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+import java.util.function.Predicate;
+
 @Slf4j
 public class Main {
 
@@ -17,13 +20,11 @@ public class Main {
         Flux<Gamepad> gamepadFlux = joyWorker.hookOnJoy("/dev/input/js0");
 
         Disposable disposable = gamepadFlux
-                .subscribe(gamepadIntrospector::introspect);
+                .map(gamepadIntrospector::introspect)
+                .filter(Predicate.not(List::isEmpty))
+                .map(Object::toString)
+                .subscribe(log::info);
 
         Runtime.getRuntime().addShutdownHook(new Thread(disposable::dispose));
-
-        gamepadFlux
-                .filter(Gamepad::isA)
-                .contextWrite(q -> q)
-                .subscribe(g -> log.info("now A"));
     }
 }

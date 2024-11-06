@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.GEvent;
 import org.asmus.model.Gamepad;
 import org.asmus.model.TimedValue;
@@ -13,18 +14,22 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
+@Slf4j
 @Value
 public class GamepadIntrospector {
 
     Map<String, TimedValue> values = new HashMap<>();
+    Set<TimedValue> holding = new HashSet<>();
 
     Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
         TimedValue previous = values.get(q.getName());
+
         if (!q.equals(previous))
             values.put(q.getName(), q);
 
-        return new TVPair(q, previous);
+        return new TVPair(previous, q);
     };
 
     Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
@@ -33,20 +38,15 @@ public class GamepadIntrospector {
                     .value(invokeRealSafe(gamepad).apply(descriptor))
                     .build();
 
-    Set<TimedValue> holding = new HashSet();
 
     @SneakyThrows
-    public List<GEvent> introspect(Gamepad gamepad) {
-
-        List<TVPair> list = Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
+    public List<TVPair> introspect(Gamepad gamepad) {
+        return Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
                 .map(toTimedValueFor(gamepad).andThen(pairWithPreviousValue))
-                .filter(q -> !q.getFirst().equals(q.second))
-                .filter(q -> Objects.nonNull(q.getSecond()))
+                .filter(q -> Objects.nonNull(q.getFirst()))
                 .filter(q -> holding.add(q.getFirst()))
-                .filter(q -> holding.remove(q.getSecond()))
+                .filter(q -> holding.remove(q.getSecond()) && holding.remove(q.getFirst()))
                 .toList();
-
-        return List.of();
     }
 
     Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
@@ -66,7 +66,7 @@ public class GamepadIntrospector {
     @Value
     @Builder
     @EqualsAndHashCode
-    static class TVPair {
+    public static class TVPair {
         TimedValue first;
         TimedValue second;
     }

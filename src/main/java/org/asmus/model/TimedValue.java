@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 @Value
 @Builder
-@EqualsAndHashCode
 public class TimedValue {
     @Builder.Default
     LocalDateTime date = LocalDateTime.now();
+    @EqualsAndHashCode.Include
     String name;
     String value;
 }

@@ -20,7 +20,7 @@ public class GamepadIntrospector {
     Map<String, TimedValue> values = new HashMap<>();
 
     Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
-        TimedValue previous = values.remove(q.getName());
+        TimedValue previous = values.get(q.getName());
         if (!q.equals(previous))
             values.put(q.getName(), q);
 
@@ -33,13 +33,17 @@ public class GamepadIntrospector {
                     .value(invokeRealSafe(gamepad).apply(descriptor))
                     .build();
 
+    Set<TimedValue> holding = new HashSet();
+
     @SneakyThrows
     public List<GEvent> introspect(Gamepad gamepad) {
 
-        List<TVPair> list = Arrays.stream(Introspector.getBeanInfo(gamepad.getClass())
-                        .getPropertyDescriptors())
+        List<TVPair> list = Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
                 .map(toTimedValueFor(gamepad).andThen(pairWithPreviousValue))
                 .filter(q -> !q.getFirst().equals(q.second))
+                .filter(q -> Objects.nonNull(q.getSecond()))
+                .filter(q -> holding.add(q.getFirst()))
+                .filter(q -> holding.remove(q.getSecond()))
                 .toList();
 
         return List.of();

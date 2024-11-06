@@ -21,9 +21,10 @@ public class GamepadIntrospector {
     Map<String, TimedValue> values = new HashMap<>();
 
     Function<TimedValue, TVPair> pairWithPreviousValue = q -> new TVPair(q, values.put(q.getName(), q));
-    Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = g -> q -> TimedValue.builder()
-                    .name(q.getName())
-                    .value(invokeRealSafe(g).apply(q))
+    Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
+            TimedValue.builder()
+                    .name(descriptor.getName())
+                    .value(invokeRealSafe(gamepad).apply(descriptor))
                     .build();
 
     @SneakyThrows

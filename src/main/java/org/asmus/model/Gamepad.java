@@ -21,7 +21,8 @@ public class Gamepad {
     boolean LEFT_BUMPER;
     boolean RIGHT_BUMPER;
 
-    boolean BACK;
+    @Builder.Default
+    boolean BACK = false;
     boolean START;
 
     int DPAD_UP;

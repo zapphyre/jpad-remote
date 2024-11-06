@@ -5,6 +5,8 @@ import org.asmus.model.Gamepad;
 import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
 import org.bbi.linuxjoy.LinuxJoystick;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
@@ -18,6 +20,7 @@ import java.util.function.Function;
 
 public class JoyWorker {
 
+    private static final Logger log = LoggerFactory.getLogger(JoyWorker.class);
     private final Sinks.Many<Gamepad> sink = Sinks.many().multicast().directBestEffort();
     private Gamepad gamepad = Gamepad.builder().build();
 
@@ -45,10 +48,11 @@ public class JoyWorker {
 
         return sink.asFlux()
                 .distinctUntilChanged()
-                .doOnTerminate(() -> {
-                    j.close();
+                .doFinally((q) -> {
+                    log.info("winding down jpad-remote");
                     pollerCloseable.cancel(true);
                     emiterCloseable.cancel(true);
+                    j.close();
                 });
     }
 

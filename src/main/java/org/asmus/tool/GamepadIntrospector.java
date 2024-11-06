@@ -1,5 +1,7 @@
 package org.asmus.tool;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.Value;
 import org.asmus.model.GEvent;
@@ -9,10 +11,7 @@ import org.asmus.model.TimedValue;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @Value
@@ -20,7 +19,14 @@ public class GamepadIntrospector {
 
     Map<String, TimedValue> values = new HashMap<>();
 
-    Function<TimedValue, TVPair> pairWithPreviousValue = q -> new TVPair(q, values.put(q.getName(), q));
+    Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
+        TimedValue previous = values.remove(q.getName());
+        if (!q.equals(previous))
+            values.put(q.getName(), q);
+
+        return new TVPair(q, previous);
+    };
+
     Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
             TimedValue.builder()
                     .name(descriptor.getName())
@@ -32,13 +38,14 @@ public class GamepadIntrospector {
 
         List<TVPair> list = Arrays.stream(Introspector.getBeanInfo(gamepad.getClass())
                         .getPropertyDescriptors())
-                .map(toTimedValueInstance(gamepad).andThen(pairWithPreviousValue))
+                .map(toTimedValueFor(gamepad).andThen(pairWithPreviousValue))
+                .filter(q -> !q.getFirst().equals(q.second))
                 .toList();
 
         return List.of();
     }
 
-    Function<PropertyDescriptor, TimedValue> toTimedValueInstance(Gamepad gamepad) {
+    Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
         return toTimedValue.apply(gamepad);
     }
 
@@ -52,6 +59,11 @@ public class GamepadIntrospector {
         };
     }
 
-    record TVPair(TimedValue first, TimedValue second) {
+    @Value
+    @Builder
+    @EqualsAndHashCode
+    static class TVPair {
+        TimedValue first;
+        TimedValue second;
     }
 }

@@ -5,7 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.model.GEvent;
 import org.asmus.model.Gamepad;
 import org.asmus.model.TimedValue;
 
@@ -14,16 +13,15 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 @Slf4j
 @Value
 public class GamepadIntrospector {
 
-    Map<String, TimedValue> values = new HashMap<>();
-    Set<TimedValue> holding = new HashSet<>();
+    static Map<String, TimedValue> values = new HashMap<>();
+    static Set<TimedValue> holding = new HashSet<>();
 
-    Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
+    static Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
         TimedValue previous = values.get(q.getName());
 
         if (!q.equals(previous))
@@ -32,7 +30,7 @@ public class GamepadIntrospector {
         return new TVPair(previous, q);
     };
 
-    Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
+    static Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
             TimedValue.builder()
                     .name(descriptor.getName())
                     .value(invokeRealSafe(gamepad).apply(descriptor))
@@ -40,7 +38,7 @@ public class GamepadIntrospector {
 
 
     @SneakyThrows
-    public List<TVPair> introspect(Gamepad gamepad) {
+    static public List<TVPair> introspect(Gamepad gamepad) {
         return Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
                 .map(toTimedValueFor(gamepad).andThen(pairWithPreviousValue))
                 .filter(q -> Objects.nonNull(q.getFirst()))
@@ -49,11 +47,11 @@ public class GamepadIntrospector {
                 .toList();
     }
 
-    Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
+    static Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
         return toTimedValue.apply(gamepad);
     }
 
-    Function<PropertyDescriptor, String> invokeRealSafe(Gamepad gamepad) {
+    static Function<PropertyDescriptor, String> invokeRealSafe(Gamepad gamepad) {
         return descriptor -> {
             try {
                 return descriptor.getReadMethod().invoke(gamepad).toString();

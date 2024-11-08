@@ -1,7 +1,7 @@
 package org.asmus.tool;
 
 import lombok.SneakyThrows;
-import lombok.Value;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.Gamepad;
 import org.asmus.model.TVPair;
@@ -14,13 +14,13 @@ import java.util.*;
 import java.util.function.Function;
 
 @Slf4j
-@Value
+@UtilityClass
 public class GamepadIntrospector {
 
-    static Map<String, TimedValue> values = new HashMap<>();
-    static Set<TimedValue> holding = new HashSet<>();
+    Map<String, TimedValue> values = new HashMap<>();
+    Set<TimedValue> holding = new HashSet<>();
 
-    static Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
+    Function<TimedValue, TVPair> pairWithPreviousValue = q -> {
         TimedValue previous = values.get(q.getName());
 
         if (!q.equals(previous))
@@ -32,7 +32,7 @@ public class GamepadIntrospector {
                 .build();
     };
 
-    static Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
+    Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
             TimedValue.builder()
                     .name(descriptor.getName())
                     .value(invokeRealSafe(gamepad).apply(descriptor))
@@ -49,11 +49,11 @@ public class GamepadIntrospector {
                 .toList();
     }
 
-    static Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
+    Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
         return toTimedValue.apply(gamepad);
     }
 
-    static Function<PropertyDescriptor, String> invokeRealSafe(Gamepad gamepad) {
+    Function<PropertyDescriptor, String> invokeRealSafe(Gamepad gamepad) {
         return descriptor -> {
             try {
                 return descriptor.getReadMethod().invoke(gamepad).toString();

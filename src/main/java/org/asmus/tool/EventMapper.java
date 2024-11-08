@@ -1,5 +1,6 @@
 package org.asmus.tool;
 
+import lombok.experimental.UtilityClass;
 import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
 import org.asmus.model.*;
@@ -12,10 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@UtilityClass
 public class EventMapper {
 
-    private static Duration longStep = Duration.ofMillis(300);
-    private static Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
+    Duration longStep = Duration.ofMillis(300);
+    Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
 
     public static QualifiedEType translateTimed(List<TVPair> pairs) {
         QualifiedEType qualifiedEType = translate(pairs);
@@ -57,7 +59,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static EType translate(TVPair tvPair) {
+    static EType translate(TVPair tvPair) {
         boolean axisEvt = Arrays.stream(EAxisGamepadEvt.values())
                 .anyMatch(q -> q.name().equals(tvPair.getFirst().getName()));
 

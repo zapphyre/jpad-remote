@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventMapper {
 
-    private static Duration longStep = Duration.ofMillis(420);
+    private static Duration longStep = Duration.ofMillis(300);
     private static Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
 
     public static QualifiedEType translateTimed(List<GamepadIntrospector.TVPair> pairs) {

@@ -21,15 +21,18 @@ public class Gamepad {
     boolean LEFT_BUMPER;
     boolean RIGHT_BUMPER;
 
-    @Builder.Default
-    boolean BACK = false;
+    boolean BACK;
     boolean START;
 
-    int DPAD_UP;
-    int DPAD_DOWN;
-    int DPAD_LEFT;
-    int DPAD_RIGHT;
-    int DPAD_CENTER;
+    int LEFT_STICK_Y;
+    int LEFT_STICK_X;
+//    int LEFT_STICK_LEFT;
+//    int LEFT_STICK_RIGHT;
+
+    int RIGHT_STICK_UP;
+    int RIGHT_STICK_DOWN;
+    int RIGHT_STICK_LEFT;
+    int RIGHT_STICK_RIGHT;
 
     boolean DPAD_LEFT_BUMPER;
     boolean DPAD_RIGHT_BUMPER;

@@ -48,7 +48,7 @@ public class JoyWorker {
 
         return sink.asFlux()
                 .distinctUntilChanged()
-                .doFinally((q) -> {
+                .doFinally(q -> {
                     log.info("winding down jpad-remote");
                     pollerCloseable.cancel(true);
                     emiterCloseable.cancel(true);
@@ -64,6 +64,6 @@ public class JoyWorker {
     }
 
     <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
-        return pos -> setter -> setter.setTriggered(getter.apply(pos));
+        return idx -> setter -> setter.setTriggered(getter.apply(idx));
     }
 }

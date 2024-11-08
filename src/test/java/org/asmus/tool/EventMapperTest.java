@@ -1,7 +1,9 @@
 package org.asmus.tool;
 
+import org.asmus.model.EPressType;
 import org.asmus.model.QualifiedEType;
 import org.asmus.model.TimedValue;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -32,14 +34,17 @@ public class EventMapperTest {
                 .build();
 
         QualifiedEType qualifiedEType = EventMapper.translateTimed(List.of(first, second));
-        System.out.println(qualifiedEType);
+        Assertions.assertEquals(EPressType.CLICK, qualifiedEType.getPressType());
 
         Thread.sleep(500);
+
         qualifiedEType = EventMapper.translateTimed(List.of(first, second));
-        System.out.println(qualifiedEType);
+        Assertions.assertEquals(EPressType.CLICK, qualifiedEType.getPressType());
+
         qualifiedEType = EventMapper.translateTimed(List.of(first, second));
-        System.out.println(qualifiedEType);
+        Assertions.assertEquals(EPressType.DOUBLE, qualifiedEType.getPressType());
+
         qualifiedEType = EventMapper.translateTimed(List.of(first, second));
-        System.out.println(qualifiedEType);
+        Assertions.assertEquals(EPressType.TRIPLE, qualifiedEType.getPressType());
     }
 }

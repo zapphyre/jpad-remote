@@ -21,7 +21,7 @@ public class Main {
                 .mapNotNull(GamepadIntrospector::introspect)
                 .filter(Predicate.not(List::isEmpty))
                 .map(EventMapper::translateTimed)
-                .bufferTimeout(3, Duration.ofMillis(420))
+                .bufferTimeout(3, Duration.ofMillis(300))
                 .flatMap(events -> events.size() == 1 ?
                         Flux.just(events.getFirst()) : Flux.just(events.getLast()))
                 .map(Object::toString)

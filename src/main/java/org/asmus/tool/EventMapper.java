@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventMapper {
 
@@ -29,17 +30,20 @@ public class EventMapper {
         LocalDateTime now = LocalDateTime.now();
         boolean multiclick = Duration.between(last.getLastEvent(), now).compareTo(longStep) < 0;
 
-        eventsMap.put(qualifiedEType.getType(), last
-                .withLastEvent(now));
+        if (!multiclick) {
+            eventsMap.put(qualifiedEType.getType(), MeteredKeyEvent.builder()
+                    .multiplicity(new AtomicInteger(1))
+                    .build());
 
-        if (!multiclick)
             return qualifiedEType;
+        }
 
+        AtomicInteger incremented = last.incrementAndGetMultiplicity();
         eventsMap.put(qualifiedEType.getType(), last
-                .withMultiplicity(last.incrementAndGetMultiplicity())
+                .withMultiplicity(incremented)
                 .withLastEvent(now));
 
-        return qualifiedEType.withPressType(EPressType.getByClickCount(last.getMultiplicity().get()));
+        return qualifiedEType.withPressType(EPressType.getByClickCount(incremented.get()));
     }
 
     public static QualifiedEType translate(List<GamepadIntrospector.TVPair> pairs) {

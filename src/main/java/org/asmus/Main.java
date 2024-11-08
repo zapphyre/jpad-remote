@@ -2,6 +2,7 @@ package org.asmus;
 
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.Gamepad;
+import org.asmus.model.QualifiedEType;
 import org.asmus.service.JoyWorker;
 import org.asmus.tool.EventMapper;
 import org.asmus.tool.GamepadIntrospector;
@@ -29,6 +30,11 @@ public class Main {
 //                .flatMap(Flux::collectList)  // Collecting items in each window into a list
 //                .doOnNext(q -> log.info("click count: {}", q.size()))
                 .map(EventMapper::translateTimed)
+//                .bufferUntilChanged(QualifiedEType::getType)
+//                .buffer(Duration.ofMillis(500)) // Collect events within each 420ms period
+                .bufferTimeout(3, Duration.ofMillis(420))
+                .flatMap(events -> events.size() == 1 ?
+                        Flux.just(events.getFirst()) : Flux.just(events.getLast()))
                 .map(Object::toString)
                 .subscribe(log::info);
 

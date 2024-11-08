@@ -1,11 +1,10 @@
 package org.asmus.tool;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.Gamepad;
+import org.asmus.model.TVPair;
 import org.asmus.model.TimedValue;
 
 import java.beans.Introspector;
@@ -27,7 +26,10 @@ public class GamepadIntrospector {
         if (!q.equals(previous))
             values.put(q.getName(), q);
 
-        return new TVPair(previous, q);
+        return TVPair.builder()
+                .first(previous)
+                .second(q)
+                .build();
     };
 
     static Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
@@ -61,11 +63,4 @@ public class GamepadIntrospector {
         };
     }
 
-    @Value
-    @Builder
-    @EqualsAndHashCode
-    public static class TVPair {
-        TimedValue first;
-        TimedValue second;
-    }
 }

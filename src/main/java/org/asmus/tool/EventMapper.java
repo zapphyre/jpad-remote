@@ -2,10 +2,7 @@ package org.asmus.tool;
 
 import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
-import org.asmus.model.EPressType;
-import org.asmus.model.EType;
-import org.asmus.model.MeteredKeyEvent;
-import org.asmus.model.QualifiedEType;
+import org.asmus.model.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -20,7 +17,7 @@ public class EventMapper {
     private static Duration longStep = Duration.ofMillis(300);
     private static Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
 
-    public static QualifiedEType translateTimed(List<GamepadIntrospector.TVPair> pairs) {
+    public static QualifiedEType translateTimed(List<TVPair> pairs) {
         QualifiedEType qualifiedEType = translate(pairs);
 
         if (qualifiedEType.getPressType().ordinal() > 2) return qualifiedEType;
@@ -46,8 +43,8 @@ public class EventMapper {
         return qualifiedEType.withPressType(EPressType.getByClickCount(incremented.get()));
     }
 
-    public static QualifiedEType translate(List<GamepadIntrospector.TVPair> pairs) {
-        GamepadIntrospector.TVPair tvPair = pairs.getFirst();
+    public static QualifiedEType translate(List<TVPair> pairs) {
+        TVPair tvPair = pairs.getFirst();
 
         EType type = translate(tvPair);
 
@@ -60,7 +57,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static EType translate(GamepadIntrospector.TVPair tvPair) {
+    public static EType translate(TVPair tvPair) {
         boolean axisEvt = Arrays.stream(EAxisGamepadEvt.values())
                 .anyMatch(q -> q.name().equals(tvPair.getFirst().getName()));
 

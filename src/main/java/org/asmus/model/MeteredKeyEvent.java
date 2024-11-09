@@ -16,7 +16,7 @@ public class MeteredKeyEvent {
     @Builder.Default
     AtomicInteger multiplicity = new AtomicInteger();
 
-    public AtomicInteger incrementAndGetMultiplicity() {
+    public AtomicInteger getAndIncrementMultiplicity() {
         multiplicity.getAndIncrement();
         return multiplicity;
     }

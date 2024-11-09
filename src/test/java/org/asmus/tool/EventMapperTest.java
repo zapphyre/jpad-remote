@@ -2,6 +2,7 @@ package org.asmus.tool;
 
 import org.asmus.model.EPressType;
 import org.asmus.model.QualifiedEType;
+import org.asmus.model.TVPair;
 import org.asmus.model.TimedValue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ public class EventMapperTest {
 
     @Test
     void testClickMultiplicity() throws InterruptedException {
-        GamepadIntrospector.TVPair first = GamepadIntrospector.TVPair.builder()
+        TVPair first = TVPair.builder()
                 .first(TimedValue.builder()
                         .name("a")
                         .build())
@@ -23,7 +24,7 @@ public class EventMapperTest {
                         .build())
                 .build();
 
-        GamepadIntrospector.TVPair second = GamepadIntrospector.TVPair.builder()
+        TVPair second = TVPair.builder()
                 .first(TimedValue.builder()
                         .name("a")
                         .date(LocalDateTime.now().plus(50, ChronoUnit.MILLIS))

@@ -8,13 +8,11 @@ public class GamepadIntrospectorTest {
 
     @Test
     void reflection() {
-        GamepadIntrospector introspector = new GamepadIntrospector();
-
         Gamepad gpad = Gamepad.builder()
 //                .BACK(true)
                 .build();
 
-        introspector.introspect(gpad);
+        GamepadIntrospector.introspect(gpad);
 
         Assertions.assertFalse(gpad.isBACK());
     }

@@ -10,5 +10,5 @@ public enum EType {
     B,
     X,
     Y,
-    ;
+    LEFT_STICK_CLICK;
 }

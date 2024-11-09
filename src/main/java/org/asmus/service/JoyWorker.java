@@ -4,6 +4,7 @@ import org.asmus.function.GamepadInputGroupQuery;
 import org.asmus.model.Gamepad;
 import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
+import org.asmus.model.GamepadDefinition;
 import org.bbi.linuxjoy.LinuxJoystick;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +25,12 @@ public class JoyWorker {
     private final Sinks.Many<Gamepad> sink = Sinks.many().multicast().directBestEffort();
     private Gamepad gamepad = Gamepad.builder().build();
 
-    public Flux<Gamepad> hookOnJoy(String dev) {
-        LinuxJoystick j = new LinuxJoystick(dev, 11, 8);
+    public Flux<Gamepad> hookOnDefault() {
+        return hookOn(GamepadDefinition.builder().build());
+    }
+
+    public Flux<Gamepad> hookOn(GamepadDefinition definition) {
+        LinuxJoystick j = new LinuxJoystick(definition.getDev(), definition.getButtons(), definition.getAxis());
 
         GamepadInputGroupQuery<Boolean> buttonStateSetor = setorAbout(j::getButtonState);
         GamepadInputGroupQuery<Integer> axisStateSetor = setorAbout(j::getAxisState);

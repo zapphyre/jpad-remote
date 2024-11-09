@@ -37,7 +37,7 @@ public class EventMapper {
             return qualifiedEType;
         }
 
-        AtomicInteger incremented = last.incrementAndGetMultiplicity();
+        AtomicInteger incremented = last.getAndIncrementMultiplicity();
         eventsMap.put(qualifiedEType.getType(), last
                 .withMultiplicity(incremented)
                 .withLastEvent(now));
@@ -60,35 +60,26 @@ public class EventMapper {
     }
 
     static EType translate(TVPair tvPair) {
-        boolean axisEvt = Arrays.stream(EAxisGamepadEvt.values())
+        boolean buttonEvt = Arrays.stream(EButtonGamepadEvt.values())
                 .anyMatch(q -> q.name().equals(tvPair.getFirst().getName()));
 
-        if (axisEvt) {
-            int firstAxis = Integer.parseInt(tvPair.getFirst().getValue());
-            int secondAxis = Integer.parseInt(tvPair.getSecond().getValue());
-
-            if (EAxisGamepadEvt.valueOf(tvPair.getFirst().getName()) == EAxisGamepadEvt.LEFT_STICK_X)
-                if (firstAxis > secondAxis) {
-                    return EType.LEFT_STICK_LEFT;
-                } else {
-                    return EType.LEFT_STICK_RIGHT;
-                }
-
-            if (EAxisGamepadEvt.valueOf(tvPair.getFirst().getName()) == EAxisGamepadEvt.LEFT_STICK_Y) {
-                if (firstAxis > secondAxis) {
-                    return EType.LEFT_STICK_UP;
-                } else {
-                    return EType.LEFT_STICK_DOWN;
-                }
-            }
-        } else {
+        if (buttonEvt)
             return switch (EButtonGamepadEvt.valueOf(tvPair.getFirst().getName().toUpperCase())) {
                 case A -> EType.A;
                 case B -> EType.B;
                 case X -> EType.X;
                 case Y -> EType.Y;
+                case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;
             };
-        }
+
+        int firstAxis = Integer.parseInt(tvPair.getFirst().getValue());
+        int secondAxis = Integer.parseInt(tvPair.getSecond().getValue());
+
+        if (EAxisGamepadEvt.valueOf(tvPair.getFirst().getName()) == EAxisGamepadEvt.LEFT_STICK_X)
+            return firstAxis > secondAxis ? EType.LEFT_STICK_LEFT : EType.LEFT_STICK_RIGHT;
+
+        if (EAxisGamepadEvt.valueOf(tvPair.getFirst().getName()) == EAxisGamepadEvt.LEFT_STICK_Y)
+            return firstAxis > secondAxis ? EType.LEFT_STICK_UP : EType.LEFT_STICK_DOWN;
 
         throw new RuntimeException();
     }

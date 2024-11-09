@@ -15,6 +15,7 @@ public enum EButtonGamepadEvt implements Reducible<Boolean> {
     B(1, g -> g::withB),
     X(2, g -> g::withX),
     Y(3, g -> g::withY),
+    LEFT_STICK_CLICK(9, g -> g::withLEFT_STICK_CLICK),
     ;
 
     final int num;

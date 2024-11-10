@@ -46,7 +46,7 @@ public class EventMapper {
     }
 
     public static QualifiedEType translate(List<TVPair> pairs) {
-        TVPair tvPair = pairs.getFirst();
+        TVPair tvPair = pairs.getLast();
 
         EType type = translate(tvPair);
 
@@ -61,10 +61,10 @@ public class EventMapper {
 
     static EType translate(TVPair tvPair) {
         boolean buttonEvt = Arrays.stream(EButtonGamepadEvt.values())
-                .anyMatch(q -> q.name().equals(tvPair.getFirst().getName()));
+                .anyMatch(q -> q.name().equals(tvPair.getSecond().getName().toUpperCase()));
 
         if (buttonEvt)
-            return switch (EButtonGamepadEvt.valueOf(tvPair.getFirst().getName().toUpperCase())) {
+            return switch (EButtonGamepadEvt.valueOf(tvPair.getSecond().getName().toUpperCase())) {
                 case A -> EType.A;
                 case B -> EType.B;
                 case X -> EType.X;
@@ -72,15 +72,49 @@ public class EventMapper {
                 case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;
             };
 
-        int firstAxis = Integer.parseInt(tvPair.getFirst().getValue());
-        int secondAxis = Integer.parseInt(tvPair.getSecond().getValue());
+        EAxisGamepadEvt axisEvt = EAxisGamepadEvt.valueOf(tvPair.getSecond().getName());
 
-        if (EAxisGamepadEvt.valueOf(tvPair.getFirst().getName()) == EAxisGamepadEvt.LEFT_STICK_X)
-            return firstAxis > secondAxis ? EType.LEFT_STICK_LEFT : EType.LEFT_STICK_RIGHT;
+        int yAxis = 0;
+        if (axisEvt == EAxisGamepadEvt.LEFT_STICK_Y)
+            yAxis = Integer.parseInt(tvPair.getSecond().getValue());
 
-        if (EAxisGamepadEvt.valueOf(tvPair.getFirst().getName()) == EAxisGamepadEvt.LEFT_STICK_Y)
-            return firstAxis > secondAxis ? EType.LEFT_STICK_UP : EType.LEFT_STICK_DOWN;
+        int xAxis = 0;
+        if (axisEvt == EAxisGamepadEvt.LEFT_STICK_X)
+            xAxis = Integer.parseInt(tvPair.getSecond().getValue());
 
-        throw new RuntimeException();
+        double theta = getTheta(xAxis, yAxis);
+        double r = getR(xAxis, yAxis);
+//        System.out.println("thta: " + theta);
+//        System.out.println("r: " + r);
+
+//        if (xAxis == 0 || yAxis == 0)
+//            return EType.FIZZY;
+
+        final int trshold = 2_000;
+
+        if (r < trshold)
+            return EType.FIZZY;
+
+        if (theta < 0.5 && theta > -0.5)
+            return EType.LEFT_STICK_RIGHT;
+        else if (theta < 0.5 && theta > -2.5)
+            return EType.LEFT_STICK_UP;
+         else if (theta > 0.5 && theta < 2.5)
+            return EType.LEFT_STICK_DOWN;
+        else
+            return EType.LEFT_STICK_LEFT;
+    }
+
+    public static double getTheta(double x, double y) {
+        return Math.atan2(y, x);
+    }
+
+    public static double getR(double x, double y) {
+        return Math.sqrt((x * x) + (y * y));
+    }
+
+    static boolean axisWithinBounds(int axis) {
+        System.out.println("xAxis: " + axis);
+        return Math.abs(axis) < 5_000;
     }
 }

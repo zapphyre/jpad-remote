@@ -27,8 +27,6 @@ public class Gamepad {
     int LEFT_STICK_Y;
     int LEFT_STICK_X;
     boolean LEFT_STICK_CLICK;
-//    int LEFT_STICK_LEFT;
-//    int LEFT_STICK_RIGHT;
 
     int RIGHT_STICK_UP;
     int RIGHT_STICK_DOWN;

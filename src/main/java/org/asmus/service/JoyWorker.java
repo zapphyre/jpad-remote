@@ -26,17 +26,6 @@ public class JoyWorker {
     private final Sinks.Many<Gamepad> axisStream = Sinks.many().multicast().directBestEffort();
     private final Gamepad gamepad = Gamepad.builder().build();
 
-    BiFunction<Gamepad, EButtonGamepadEvt, Gamepad> reducer(GamepadInputGroupQuery<Boolean> buttonQuery) {
-        return (gamepad, evt) -> buttonQuery.getValueForIndex(evt.getNum())
-                .targetReturningSetter(evt.getSetter().setOn(gamepad));
-    }
-
-    <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
-        return idx -> witter -> witter.setTriggered(getter.apply(idx));
-    }
-
-    BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
-
     public GamepadStateStream hookOnDefault() {
         return hookOn(GamepadDefinition.builder().build());
     }
@@ -76,4 +65,10 @@ public class JoyWorker {
                 .buttonFlux(buttonStream.asFlux())
                 .build();
     }
+
+    <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
+        return idx -> witter -> witter.setTriggered(getter.apply(idx));
+    }
+
+    BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
 }

@@ -10,8 +10,10 @@ public enum EPressType {
     DOUBLE(2),
     TRIPLE(3),
 
-    LONG(4),
-    TOO_LONG(5),
+    ANALOG(4),
+
+    LONG(5),
+    TOO_LONG(6),
     ;
 
     final int clickCount;

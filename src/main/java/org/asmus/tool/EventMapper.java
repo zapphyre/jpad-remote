@@ -1,13 +1,11 @@
 package org.asmus.tool;
 
 import lombok.experimental.UtilityClass;
-import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
 import org.asmus.model.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +46,7 @@ public class EventMapper {
     public static QualifiedEType translate(List<TVPair> pairs) {
         TVPair tvPair = pairs.getLast();
 
-        EType type = translate(tvPair);
+        EType type = translateBtn(tvPair);
 
         Duration between = Duration.between(tvPair.getFirst().getDate(), tvPair.getSecond().getDate());
         long holdPeriods = between.dividedBy(longStep);
@@ -59,36 +57,34 @@ public class EventMapper {
                 .build();
     }
 
-    static EType translate(TVPair tvPair) {
-        boolean buttonEvt = Arrays.stream(EButtonGamepadEvt.values())
-                .anyMatch(q -> q.name().equals(tvPair.getSecond().getName().toUpperCase()));
+    static EType translateBtn(TVPair tvPair) {
+        return switch (EButtonGamepadEvt.valueOf(tvPair.getSecond().getName().toUpperCase())) {
+            case A -> EType.A;
+            case B -> EType.B;
+            case X -> EType.X;
+            case Y -> EType.Y;
+            case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;
+        };
+    }
 
-        if (buttonEvt)
-            return switch (EButtonGamepadEvt.valueOf(tvPair.getSecond().getName().toUpperCase())) {
-                case A -> EType.A;
-                case B -> EType.B;
-                case X -> EType.X;
-                case Y -> EType.Y;
-                case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;
-            };
+    public static QualifiedEType translateAxis(Gamepad gamepad) {
+        return QualifiedEType.builder()
+                .type(translateAxisMove(gamepad))
+                .pressType(EPressType.ANALOG)
+                .build();
+    }
 
-        EAxisGamepadEvt axisEvt = EAxisGamepadEvt.valueOf(tvPair.getSecond().getName());
+    static EType translateAxisMove(Gamepad gamepad) {
+        int yAxisLeft = gamepad.getLEFT_STICK_Y();
+        int xAxisLeft = gamepad.getLEFT_STICK_X();
 
-        int yAxis = 0;
-        if (axisEvt == EAxisGamepadEvt.LEFT_STICK_Y)
-            yAxis = Integer.parseInt(tvPair.getSecond().getValue());
+        double theta = getTheta(xAxisLeft, yAxisLeft);
+        double r = getR(xAxisLeft, yAxisLeft);
 
-        int xAxis = 0;
-        if (axisEvt == EAxisGamepadEvt.LEFT_STICK_X)
-            xAxis = Integer.parseInt(tvPair.getSecond().getValue());
+        if (theta == 0)
+            return EType.LEFT_STICK_CENTER;
 
-        double theta = getTheta(xAxis, yAxis);
-        double r = getR(xAxis, yAxis);
-//        System.out.println("thta: " + theta);
-//        System.out.println("r: " + r);
-
-//        if (xAxis == 0 || yAxis == 0)
-//            return EType.FIZZY;
+//        System.out.println("x: " + xAxisLeft + " y: " + yAxisLeft + " theta: " + theta + " r: " + r);
 
         final int trshold = 2_000;
 
@@ -99,22 +95,21 @@ public class EventMapper {
             return EType.LEFT_STICK_RIGHT;
         else if (theta < 0.5 && theta > -2.5)
             return EType.LEFT_STICK_UP;
-         else if (theta > 0.5 && theta < 2.5)
+        else if (theta > 0.5 && theta < 2.5)
             return EType.LEFT_STICK_DOWN;
-        else
-            return EType.LEFT_STICK_LEFT;
+
+        return EType.LEFT_STICK_LEFT;
     }
 
-    public static double getTheta(double x, double y) {
+    static double getTheta(double x, double y) {
         return Math.atan2(y, x);
     }
 
-    public static double getR(double x, double y) {
+    static double getR(double x, double y) {
         return Math.sqrt((x * x) + (y * y));
     }
 
     static boolean axisWithinBounds(int axis) {
-        System.out.println("xAxis: " + axis);
         return Math.abs(axis) < 5_000;
     }
 }

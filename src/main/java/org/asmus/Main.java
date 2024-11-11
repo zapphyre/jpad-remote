@@ -10,8 +10,6 @@ import static org.asmus.facade.TimedButtonGamepadFactory.createGamepadEventStrea
 public class Main {
 
     public static void main(String[] args) {
-        JoyWorker joyWorker = new JoyWorker();
-
         Disposable disposable = createGamepadEventStream()
                 .map(Object::toString)
                 .subscribe(log::info);

@@ -5,6 +5,7 @@ public enum EType {
     LEFT_STICK_RIGHT,
     LEFT_STICK_UP,
     LEFT_STICK_DOWN,
+    LEFT_STICK_CENTER,
 
     A,
     B,

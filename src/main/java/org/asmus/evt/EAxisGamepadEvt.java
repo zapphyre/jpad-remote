@@ -4,12 +4,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.asmus.function.ButtonSetter;
 import org.asmus.function.GamepadButtonSetter;
-import org.asmus.model.Reducible;
+import org.asmus.model.EPadEventReducible;
 import org.asmus.model.Gamepad;
 
 @Getter
 @RequiredArgsConstructor
-public enum EAxisGamepadEvt implements Reducible<Integer> {
+public enum EAxisGamepadEvt implements EPadEventReducible<Integer> {
 
     LEFT_STICK_X(0, g -> g::withLEFT_STICK_X),
     LEFT_STICK_Y(1, g -> g::withLEFT_STICK_Y),

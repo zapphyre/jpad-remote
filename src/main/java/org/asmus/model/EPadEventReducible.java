@@ -5,13 +5,13 @@ import org.asmus.function.GamepadInputGroupQuery;
 
 import java.util.function.BiFunction;
 
-public interface Reducible<T> {
+public interface EPadEventReducible<T> {
 
     int getNum();
 
     ButtonSetter<T> getSetterFun(Gamepad gamepad);
 
-    default BiFunction<Gamepad, Reducible<T>, Gamepad> getReducer(GamepadInputGroupQuery<T> query) {
+    default BiFunction<Gamepad, EPadEventReducible<T>, Gamepad> getReducer(GamepadInputGroupQuery<T> query) {
         return (gamepad, evt) -> query
                 .getValueForIndex(evt.getNum())
                 .targetReturningSetter(getSetterFun(gamepad));

@@ -32,8 +32,8 @@ public class JoyWorker {
     public GamepadStateStream hookOn(GamepadDefinition definition) {
         LinuxJoystick j = new LinuxJoystick(definition.getDev(), definition.getButtons(), definition.getAxis());
 
-        GamepadInputGroupQuery<Boolean> buttonStateSetor = gamepadWith(j::getButtonState);
-        GamepadInputGroupQuery<Integer> axisStateSetor = gamepadWith(j::getAxisState);
+        GamepadInputGroupQuery<Boolean> buttonStatusGamepad = gamepadWith(j::getButtonState);
+        GamepadInputGroupQuery<Integer> axisStateGamepad = gamepadWith(j::getAxisState);
 
         j.open();
 
@@ -43,11 +43,11 @@ public class JoyWorker {
                 j.poll();
 
                 Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.getReducer(buttonStateSetor).apply(q, p), laterMerger);
+                        .reduce(gamepad, (q, p) -> p.getReducer(buttonStatusGamepad).apply(q, p), laterMerger);
                 buttonStream.tryEmitNext(gamepadBtn);
 
                 Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.getReducer(axisStateSetor).apply(q, p), laterMerger);
+                        .reduce(gamepad, (q, p) -> p.getReducer(axisStateGamepad).apply(q, p), laterMerger);
                 axisStream.tryEmitNext(gamepadAxs);
             }
         }, 0, TimeUnit.MILLISECONDS);

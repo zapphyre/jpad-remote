@@ -12,6 +12,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Slf4j
 @UtilityClass
@@ -38,15 +39,21 @@ public class GamepadIntrospector {
                     .value(invokeRealSafe(gamepad).apply(descriptor))
                     .build();
 
-    @SneakyThrows
+    @SneakyThrows // produces empty list on press event
     static public List<TVPair> introspect(Gamepad gamepad) {
         return Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
                 .map(toTimedValueFor(gamepad).andThen(pairWithPreviousValue))
-                .filter(q -> Objects.nonNull(q.getFirst()))
-                .filter(q -> holding.add(q.getFirst()))
-                .filter(q -> holding.remove(q.getSecond()) && holding.remove(q.getFirst()))
+                .filter(buttonWasPressedAndReleased)
                 .toList();
     }
+
+    //first is always previous value of the button pressed
+    Predicate<TVPair> buttonStateHasBeenRecordedOnce = q -> Objects.nonNull(q.getFirst());
+    Predicate<TVPair> buttonWasActivated = q -> holding.add(q.getFirst());
+    Predicate<TVPair> buttonWasReleased = q -> holding.remove(q.getSecond()) && holding.remove(q.getFirst());
+
+    Predicate<TVPair> buttonWasPressedAndReleased =
+            buttonStateHasBeenRecordedOnce.and(buttonWasActivated).and(buttonWasReleased);
 
     Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
         return toTimedValue.apply(gamepad);

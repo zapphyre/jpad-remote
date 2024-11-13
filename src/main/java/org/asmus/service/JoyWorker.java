@@ -32,8 +32,8 @@ public class JoyWorker {
     public GamepadStateStream hookOn(GamepadDefinition definition) {
         LinuxJoystick j = new LinuxJoystick(definition.getDev(), definition.getButtons(), definition.getAxis());
 
-        GamepadInputGroupQuery<Boolean> buttonStateSetor = setorAbout(j::getButtonState);
-        GamepadInputGroupQuery<Integer> axisStateSetor = setorAbout(j::getAxisState);
+        GamepadInputGroupQuery<Boolean> buttonStateSetor = gamepadWith(j::getButtonState);
+        GamepadInputGroupQuery<Integer> axisStateSetor = gamepadWith(j::getAxisState);
 
         j.open();
 
@@ -65,7 +65,7 @@ public class JoyWorker {
                 .build();
     }
 
-    <T> GamepadInputGroupQuery<T> setorAbout(Function<Integer, T> getter) {
+    <T> GamepadInputGroupQuery<T> gamepadWith(Function<Integer, T> getter) {
         return idx -> witter -> witter.setTriggered(getter.apply(idx));
     }
 

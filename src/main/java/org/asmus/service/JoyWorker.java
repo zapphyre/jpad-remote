@@ -1,5 +1,6 @@
 package org.asmus.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
 import org.asmus.function.GamepadInputGroupQuery;
@@ -18,9 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
+@Slf4j
 public class JoyWorker {
 
-    private static final Logger log = LoggerFactory.getLogger(JoyWorker.class);
     private final Sinks.Many<Gamepad> buttonStream = Sinks.many().multicast().directBestEffort();
     private final Sinks.Many<Gamepad> axisStream = Sinks.many().multicast().directBestEffort();
     private final Gamepad gamepad = Gamepad.builder().build();

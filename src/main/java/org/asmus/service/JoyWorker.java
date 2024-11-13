@@ -7,6 +7,7 @@ import org.asmus.function.GamepadInputGroupQuery;
 import org.asmus.model.Gamepad;
 import org.asmus.model.GamepadDefinition;
 import org.asmus.model.GamepadStateStream;
+import org.bbi.linuxjoy.JoyFactory;
 import org.bbi.linuxjoy.LinuxJoystick;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

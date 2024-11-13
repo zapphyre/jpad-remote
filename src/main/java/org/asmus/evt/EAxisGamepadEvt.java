@@ -3,7 +3,7 @@ package org.asmus.evt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.asmus.function.ButtonSetter;
-import org.asmus.function.GamepadButtonSetter;
+import org.asmus.function.GamepadButtonWitter;
 import org.asmus.model.EPadEventReducible;
 import org.asmus.model.Gamepad;
 
@@ -23,10 +23,10 @@ public enum EAxisGamepadEvt implements EPadEventReducible<Integer> {
     ;
 
     final int num;
-    final GamepadButtonSetter<Integer> setter;
+    final GamepadButtonWitter<Integer> setter;
 
     @Override
-    public ButtonSetter<Integer> getSetterFun(Gamepad gamepad) {
+    public ButtonSetter<Integer> getWitterFun(Gamepad gamepad) {
         return setter.setOn(gamepad);
     }
 }

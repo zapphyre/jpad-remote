@@ -17,7 +17,7 @@ public class EventMapper {
     Duration longStep = Duration.ofMillis(300);
     Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
 
-    public static QualifiedEType translateTimed(List<TVPair> pairs) {
+    public static QualifiedEType translateButtonTimed(List<TVPair> pairs) {
         QualifiedEType qualifiedEType = translate(pairs);
 
         if (qualifiedEType.getPressType().ordinal() > 2) return qualifiedEType;

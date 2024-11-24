@@ -7,7 +7,6 @@ import org.asmus.service.JoyWorker;
 import org.asmus.tool.EventMapper;
 import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
 import java.util.List;
@@ -20,16 +19,16 @@ public class TimedButtonGamepadFactory {
     public static Flux<QualifiedEType> createGamepadEventStream() {
         final GamepadStateStream stateStream = new JoyWorker().hookOnDefault();
 
-        Flux<QualifiedEType> buttonStream = stateStream.getButtonFlux()
+        final Flux<QualifiedEType> buttonStream = stateStream.getButtonFlux()
                 .mapNotNull(GamepadIntrospector::introspect)
                 .filter(Predicate.not(List::isEmpty))
-                .map(EventMapper::translateTimed)
+                .map(EventMapper::translateButtonTimed)
                 .filter(notFizzy)
                 .bufferTimeout(3, Duration.ofMillis(300))
                 .flatMap(events -> events.size() == 1 ?
                         Flux.just(events.getFirst()) : Flux.just(events.getLast()));
 
-        Flux<QualifiedEType> axisStream = stateStream.getAxisFlux()
+        final Flux<QualifiedEType> axisStream = stateStream.getAxisFlux()
                 .distinctUntilChanged()
                 .map(EventMapper::translateAxis)
                 .filter(notFizzy)

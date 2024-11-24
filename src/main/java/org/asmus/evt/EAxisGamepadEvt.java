@@ -26,7 +26,7 @@ public enum EAxisGamepadEvt implements EPadEventReducible<Integer> {
     final GamepadButtonWitter<Integer> setter;
 
     @Override
-    public ButtonSetter<Integer> getWitterFun(Gamepad gamepad) {
+    public ButtonSetter<Integer> withButtonStateOn(Gamepad gamepad) {
         return setter.setOn(gamepad);
     }
 }

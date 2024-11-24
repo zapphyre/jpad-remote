@@ -9,11 +9,11 @@ public interface EPadEventReducible<T> {
 
     int getNum();
 
-    ButtonSetter<T> getWitterFun(Gamepad gamepad);
+    ButtonSetter<T> withButtonStateOn(Gamepad gamepad);
 
     default BiFunction<Gamepad, EPadEventReducible<T>, Gamepad> getReducer(GamepadInputGroupQuery<T> query) {
         return (gamepad, evt) -> query
                 .getValueForIndex(evt.getNum())
-                .targetReturningSetter(getWitterFun(gamepad));
+                .targetReturningSetter(withButtonStateOn(gamepad));
     }
 }

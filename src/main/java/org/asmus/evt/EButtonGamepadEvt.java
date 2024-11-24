@@ -22,7 +22,7 @@ public enum EButtonGamepadEvt implements EPadEventReducible<Boolean> {
     final GamepadButtonWitter<Boolean> witter;
 
     @Override
-    public ButtonSetter<Boolean> getWitterFun(Gamepad gamepad) {
+    public ButtonSetter<Boolean> withButtonStateOn(Gamepad gamepad) {
         return witter.setOn(gamepad);
     }
 }

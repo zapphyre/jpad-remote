@@ -29,20 +29,12 @@ public class TimedButtonGamepadFactory {
                 .flatMap(events -> events.size() == 1 ?
                         Flux.just(events.getFirst()) : Flux.just(events.getLast()));
 
-        final Sinks.Many<QualifiedEType> out = Sinks.many().multicast().directBestEffort();
-        buttonStream.subscribe(out::tryEmitNext);
-
-        stateStream.getAxisFlux()
+        Flux<QualifiedEType> axisStream = stateStream.getAxisFlux()
                 .distinctUntilChanged()
                 .map(EventMapper::translateAxis)
                 .filter(notFizzy)
-                .distinctUntilChanged()
-                .subscribe(out::tryEmitNext);
+                .distinctUntilChanged();
 
-        return out.asFlux();
-//        return Flux.merge(buttonStream, stateStream.getAxisFlux().map(EventMapper::translateAxis));
-//                .filter(q -> !q.getType().equals(EType.FIZZY)));
-//        return stateStream.getAxisFlux().map(EventMapper::translateAxis).concatWith(buttonStream);
-//        return Flux.concat(buttonStream, stateStream.getAxisFlux().map(EventMapper::translateAxis));
+        return Flux.merge(buttonStream, axisStream);
     }
 }

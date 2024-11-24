@@ -11,7 +11,7 @@ public interface EPadEventReducible<T> {
 
     ButtonSetter<T> withButtonStateOn(Gamepad gamepad);
 
-    default BiFunction<Gamepad, EPadEventReducible<T>, Gamepad> getReducer(GamepadInputGroupQuery<T> query) {
+    default BiFunction<Gamepad, EPadEventReducible<T>, Gamepad> accState(GamepadInputGroupQuery<T> query) {
         return (gamepad, evt) -> query
                 .getValueForIndex(evt.getNum())
                 .targetReturningSetter(withButtonStateOn(gamepad));

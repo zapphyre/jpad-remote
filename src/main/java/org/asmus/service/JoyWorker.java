@@ -7,10 +7,7 @@ import org.asmus.function.GamepadInputGroupQuery;
 import org.asmus.model.Gamepad;
 import org.asmus.model.GamepadDefinition;
 import org.asmus.model.GamepadStateStream;
-import org.bbi.linuxjoy.JoyFactory;
 import org.bbi.linuxjoy.LinuxJoystick;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Sinks;
 
 import java.util.Arrays;
@@ -45,11 +42,11 @@ public class JoyWorker {
                 j.poll();
 
                 Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.getReducer(buttonStatusGamepad).apply(q, p), laterMerger);
+                        .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
                 buttonStream.tryEmitNext(gamepadBtn);
 
                 Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.getReducer(axisStateGamepad).apply(q, p), laterMerger);
+                        .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
                 axisStream.tryEmitNext(gamepadAxs);
             }
         }, 0, TimeUnit.MILLISECONDS);

@@ -34,18 +34,18 @@ public class EventMapperTest {
                         .build())
                 .build();
 
-        QualifiedEType qualifiedEType = EventMapper.translateTimed(List.of(first, second));
+        QualifiedEType qualifiedEType = EventMapper.translateButtonTimed(List.of(first, second));
         Assertions.assertEquals(EPressType.CLICK, qualifiedEType.getPressType());
 
         Thread.sleep(500);
 
-        qualifiedEType = EventMapper.translateTimed(List.of(first, second));
+        qualifiedEType = EventMapper.translateButtonTimed(List.of(first, second));
         Assertions.assertEquals(EPressType.CLICK, qualifiedEType.getPressType());
 
-        qualifiedEType = EventMapper.translateTimed(List.of(first, second));
+        qualifiedEType = EventMapper.translateButtonTimed(List.of(first, second));
         Assertions.assertEquals(EPressType.DOUBLE, qualifiedEType.getPressType());
 
-        qualifiedEType = EventMapper.translateTimed(List.of(first, second));
+        qualifiedEType = EventMapper.translateButtonTimed(List.of(first, second));
         Assertions.assertEquals(EPressType.TRIPLE, qualifiedEType.getPressType());
     }
 }

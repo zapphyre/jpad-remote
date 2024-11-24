@@ -93,7 +93,7 @@ public class EventMapper {
 
         if (theta < 0.5 && theta > -0.5)
             return EType.LEFT_STICK_RIGHT;
-        else if (theta < 0.5 && theta > -2.5)
+        else if (theta < -0.5 && theta > -2.5)
             return EType.LEFT_STICK_UP;
         else if (theta > 0.5 && theta < 2.5)
             return EType.LEFT_STICK_DOWN;

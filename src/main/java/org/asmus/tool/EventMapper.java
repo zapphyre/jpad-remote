@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @UtilityClass
 public class EventMapper {
 
+    int THRESHOLD = 2_000;
     Duration longStep = Duration.ofMillis(300);
     Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
 
@@ -81,14 +82,14 @@ public class EventMapper {
         double theta = getTheta(xAxisLeft, yAxisLeft);
         double r = getR(xAxisLeft, yAxisLeft);
 
+        System.out.println("r: " + r);
+
         if (theta == 0)
             return EType.LEFT_STICK_CENTER;
 
 //        System.out.println("x: " + xAxisLeft + " y: " + yAxisLeft + " theta: " + theta + " r: " + r);
 
-        final int trshold = 2_000;
-
-        if (r < trshold)
+        if (r < THRESHOLD)
             return EType.FIZZY;
 
         if (theta < 0.5 && theta > -0.5)

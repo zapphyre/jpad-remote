@@ -33,12 +33,6 @@ public class GamepadIntrospector {
                 .build();
     };
 
-    Function<Gamepad, Function<PropertyDescriptor, TimedValue>> toTimedValue = gamepad -> descriptor ->
-            TimedValue.builder()
-                    .name(descriptor.getName())
-                    .value(invokeRealSafe(gamepad).apply(descriptor))
-                    .build();
-
     @SneakyThrows // produces empty list on press event
     static public List<TVPair> introspect(Gamepad gamepad) {
         return Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
@@ -57,7 +51,10 @@ public class GamepadIntrospector {
             buttonStateHasBeenRecordedOnce.and(buttonWasActivated).and(buttonWasReleased);
 
     Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
-        return toTimedValue.apply(gamepad);
+        return descriptor -> TimedValue.builder()
+                .name(descriptor.getName())
+                .value(invokeRealSafe(gamepad).apply(descriptor))
+                .build();
     }
 
     Function<PropertyDescriptor, String> invokeRealSafe(Gamepad gamepad) {

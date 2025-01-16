@@ -6,8 +6,8 @@ import lombok.Value;
 @Value
 @Builder
 public class GamepadDefinition {
-    String dev = "/dev/input/js0";
     @Builder.Default
+    String dev = "/dev/input/js0";
     int buttons = 11;
     int axis = 8;
 }

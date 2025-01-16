@@ -8,6 +8,6 @@ import lombok.Value;
 @Builder
 @EqualsAndHashCode
 public class TVPair {
-    TimedValue first;
-    TimedValue second;
+    TimedValue push;
+    TimedValue release;
 }

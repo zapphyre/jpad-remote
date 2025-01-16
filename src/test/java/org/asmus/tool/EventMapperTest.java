@@ -16,20 +16,20 @@ public class EventMapperTest {
     @Test
     void testClickMultiplicity() throws InterruptedException {
         TVPair first = TVPair.builder()
-                .first(TimedValue.builder()
+                .push(TimedValue.builder()
                         .name("a")
                         .build())
-                .second(TimedValue.builder()
+                .release(TimedValue.builder()
                         .name("B")
                         .build())
                 .build();
 
         TVPair second = TVPair.builder()
-                .first(TimedValue.builder()
+                .push(TimedValue.builder()
                         .name("a")
                         .date(LocalDateTime.now().plus(50, ChronoUnit.MILLIS))
                         .build())
-                .second(TimedValue.builder()
+                .release(TimedValue.builder()
                         .name("x")
                         .build())
                 .build();

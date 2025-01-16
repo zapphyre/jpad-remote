@@ -49,7 +49,7 @@ public class EventMapper {
 
         EType type = translateBtn(tvPair);
 
-        Duration between = Duration.between(tvPair.getFirst().getDate(), tvPair.getSecond().getDate());
+        Duration between = Duration.between(tvPair.getPush().getDate(), tvPair.getRelease().getDate());
         long holdPeriods = between.dividedBy(longStep);
 
         return QualifiedEType.builder()
@@ -59,7 +59,7 @@ public class EventMapper {
     }
 
     static EType translateBtn(TVPair tvPair) {
-        return switch (EButtonGamepadEvt.valueOf(tvPair.getSecond().getName().toUpperCase())) {
+        return switch (EButtonGamepadEvt.valueOf(tvPair.getRelease().getName().toUpperCase())) {
             case A -> EType.A;
             case B -> EType.B;
             case X -> EType.X;

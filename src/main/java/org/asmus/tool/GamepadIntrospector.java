@@ -7,6 +7,7 @@ import org.asmus.model.Gamepad;
 import org.asmus.model.TVPair;
 import org.asmus.model.TimedValue;
 
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -21,6 +22,19 @@ public class GamepadIntrospector {
     Map<String, TimedValue> values = new HashMap<>();
     Set<TimedValue> holding = new HashSet<>();
 
+    static {
+        try {
+            Arrays.stream(Introspector.getBeanInfo(Gamepad.builder().build().getClass()).getPropertyDescriptors())
+                            .forEach(p -> toTimedValueFor(Gamepad.builder().build())
+                                    .andThen(q -> values.put(q.getName(), q))
+                                    .apply(p));
+
+            log.info("introspector initialized #{} states of Gamepad buttons", values.size());
+        } catch (IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     Function<TimedValue, TVPair> pairWithPreviousValue = current -> {
         TimedValue previous = values.get(current.getName());
 
@@ -28,8 +42,8 @@ public class GamepadIntrospector {
             values.put(current.getName(), current);
 
         return TVPair.builder()
-                .first(previous)
-                .second(current)
+                .push(previous)
+                .release(current)
                 .build();
     };
 
@@ -43,9 +57,9 @@ public class GamepadIntrospector {
     }
 
     //first is always previous value of the button pressed
-    Predicate<TVPair> buttonStateHasBeenRecordedOnce = q -> Objects.nonNull(q.getFirst());
-    Predicate<TVPair> buttonWasActivated = q -> holding.add(q.getFirst());
-    Predicate<TVPair> buttonWasReleased = q -> holding.remove(q.getSecond()) && holding.remove(q.getFirst());
+    Predicate<TVPair> buttonStateHasBeenRecordedOnce = q -> Objects.nonNull(q.getPush());
+    Predicate<TVPair> buttonWasActivated = q -> holding.add(q.getPush());
+    Predicate<TVPair> buttonWasReleased = q -> holding.remove(q.getRelease()) && holding.remove(q.getPush());
 
     Predicate<TVPair> buttonWasPressedAndReleased =
             buttonStateHasBeenRecordedOnce.and(buttonWasActivated).and(buttonWasReleased);

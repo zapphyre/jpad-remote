@@ -25,8 +25,8 @@ public class TimedButtonGamepadFactory {
                 .map(EventMapper::translateButtonTimed)
                 .filter(notFizzy)
                 .bufferTimeout(3, Duration.ofMillis(300))
-                .flatMap(events -> events.size() == 1 ?
-                        Flux.just(events.getFirst()) : Flux.just(events.getLast()));
+                .map(e -> e.size() == 1 ?
+                        e.getFirst() : e.getLast());
 
         final Flux<QualifiedEType> axisStream = stateStream.getAxisFlux()
                 .distinctUntilChanged()

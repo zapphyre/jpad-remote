@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class TimedValue {
+    
     @Builder.Default
     LocalDateTime date = LocalDateTime.now();
     @EqualsAndHashCode.Include

@@ -25,9 +25,8 @@ public class GamepadIntrospector {
     static {
         try {
             Arrays.stream(Introspector.getBeanInfo(Gamepad.builder().build().getClass()).getPropertyDescriptors())
-                            .forEach(p -> toTimedValueFor(Gamepad.builder().build())
-                                    .andThen(q -> values.put(q.getName(), q))
-                                    .apply(p));
+                    .map(toTimedValueFor(Gamepad.builder().build()))
+                    .forEach(q -> values.put(q.getName(), q));
 
             log.info("introspector initialized #{} states of Gamepad buttons", values.size());
         } catch (IntrospectionException e) {

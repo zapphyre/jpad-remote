@@ -23,6 +23,7 @@ public class Gamepad {
 
     boolean BACK;
     boolean START;
+    boolean SELECT;
 
     int LEFT_STICK_Y;
     int LEFT_STICK_X;

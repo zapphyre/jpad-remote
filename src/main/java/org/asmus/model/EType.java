@@ -11,6 +11,8 @@ public enum EType {
     B,
     X,
     Y,
+    SELECT,
+    START,
     LEFT_STICK_CLICK,
 
     FIZZY,

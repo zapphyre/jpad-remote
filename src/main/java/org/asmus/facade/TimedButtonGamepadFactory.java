@@ -26,7 +26,8 @@ public class TimedButtonGamepadFactory {
                 .filter(notFizzy)
                 .bufferTimeout(3, Duration.ofMillis(300))
                 .map(e -> e.size() == 1 ?
-                        e.getFirst() : e.getLast());
+                        e.getFirst() : e.getLast())
+                ;
 
         final Flux<QualifiedEType> axisStream = stateStream.getAxisFlux()
                 .distinctUntilChanged()
@@ -34,6 +35,6 @@ public class TimedButtonGamepadFactory {
                 .filter(notFizzy)
                 .distinctUntilChanged();
 
-        return Flux.merge(buttonStream, axisStream);
+        return Flux.merge(buttonStream, axisStream).publish().autoConnect();
     }
 }

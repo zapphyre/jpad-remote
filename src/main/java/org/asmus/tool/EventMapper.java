@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EventMapper {
 
     int THRESHOLD = 2_000;
-    Duration longStep = Duration.ofMillis(300);
+    Duration longStep = Duration.ofMillis(250);
     Map<EType, MeteredKeyEvent> eventsMap = new EnumMap<>(EType.class);
 
     public static QualifiedEType translateButtonTimed(List<TVPair> pairs) {
@@ -64,6 +64,8 @@ public class EventMapper {
             case B -> EType.B;
             case X -> EType.X;
             case Y -> EType.Y;
+            case START -> EType.START;
+            case SELECT -> EType.SELECT;
             case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;
         };
     }

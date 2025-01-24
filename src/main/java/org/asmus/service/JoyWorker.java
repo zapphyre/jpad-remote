@@ -1,5 +1,6 @@
 package org.asmus.service;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.evt.EAxisGamepadEvt;
 import org.asmus.evt.EButtonGamepadEvt;
@@ -12,8 +13,6 @@ import reactor.core.publisher.Sinks;
 
 import java.util.Arrays;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
@@ -28,6 +27,7 @@ public class JoyWorker {
         return hookOn(GamepadDefinition.builder().build());
     }
 
+    @SneakyThrows
     public GamepadStateStream hookOn(GamepadDefinition definition) {
         LinuxJoystick j = new LinuxJoystick(definition.getDev(), definition.getButtons(), definition.getAxis());
 
@@ -36,9 +36,11 @@ public class JoyWorker {
 
         j.open();
 
-        ScheduledFuture<?> pollerCloseable = Executors.newSingleThreadScheduledExecutor().schedule(() -> {
-            while (true) {
+//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+        Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+            if (!j.isDeviceOpen() || !j.isChanged()) return;
 
+            while (true) {
                 j.poll();
 
                 Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
@@ -49,10 +51,21 @@ public class JoyWorker {
                         .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
                 axisStream.tryEmitNext(gamepadAxs);
             }
-        }, 0, TimeUnit.MILLISECONDS);
+//        }, 0, 50, TimeUnit.MILLISECONDS);
+        });
+
+//        ScheduledFuture<?> pollerCloseable = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+//        Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+//        Thread.ofVirtual().start(() -> {
+//            while (true) {
+//
+//
+//            }
+////        }, 0, 50, TimeUnit.MILLISECONDS);
+//        });
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            pollerCloseable.cancel(true);
+//            pollerCloseable.cancel(true);
             axisStream.tryEmitComplete();
             buttonStream.tryEmitComplete();
             j.close();

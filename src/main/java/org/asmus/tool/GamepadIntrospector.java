@@ -46,13 +46,14 @@ public class GamepadIntrospector {
                 .build();
     };
 
-    @SneakyThrows // produces empty list on press event
-    static public List<TVPair> introspect(Gamepad gamepad) {
+    @SneakyThrows
+    static public TVPair introspect(Gamepad gamepad) {
         return Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
                 .map(toTimedValueFor(gamepad))
                 .map(pairWithPreviousValue)
                 .filter(buttonWasPressedAndReleased)
-                .toList();
+                .reduce((acc, e) -> e)
+                .orElse(null);
     }
 
     //first is always previous value of the button pressed

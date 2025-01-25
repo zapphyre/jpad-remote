@@ -8,13 +8,12 @@ import java.time.LocalDateTime;
 
 @Value
 @Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
 public class TimedValue {
     
     @Builder.Default
+    @EqualsAndHashCode.Exclude
     LocalDateTime date = LocalDateTime.now();
-    @EqualsAndHashCode.Include
     String name;
-    @EqualsAndHashCode.Include
     String value;
 }

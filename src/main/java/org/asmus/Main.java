@@ -1,16 +1,15 @@
 package org.asmus;
 
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.service.JoyWorker;
 import reactor.core.Disposable;
 
-import static org.asmus.facade.TimedButtonGamepadFactory.createGamepadEventStream;
+import static org.asmus.facade.TimedButtonGamepadFactory.getButtonStream;
 
 @Slf4j
 public class Main {
 
-    public static void main(String[] args) {
-        Disposable disposable = createGamepadEventStream()
+    public static void main(String[] args) throws InterruptedException {
+        Disposable disposable = getButtonStream()
                 .map(Object::toString)
                 .subscribe(log::info);
 

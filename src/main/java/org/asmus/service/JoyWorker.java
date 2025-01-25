@@ -13,6 +13,8 @@ import reactor.core.publisher.Sinks;
 
 import java.util.Arrays;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
@@ -36,36 +38,25 @@ public class JoyWorker {
 
         j.open();
 
-//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
         Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
-            if (!j.isDeviceOpen() || !j.isChanged()) return;
-
-            while (true) {
-                j.poll();
-
-                Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
-                buttonStream.tryEmitNext(gamepadBtn);
-
-                Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
-                axisStream.tryEmitNext(gamepadAxs);
-            }
-//        }, 0, 50, TimeUnit.MILLISECONDS);
+            while (true) j.poll();
         });
 
-//        ScheduledFuture<?> pollerCloseable = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-//        Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
-//        Thread.ofVirtual().start(() -> {
-//            while (true) {
-//
-//
-//            }
-////        }, 0, 50, TimeUnit.MILLISECONDS);
-//        });
+        ScheduledFuture<?> pollerCloseable = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+            if (!j.isChanged()) return;
+
+            Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
+                    .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
+            buttonStream.tryEmitNext(gamepadBtn);
+
+            Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
+                    .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
+            axisStream.tryEmitNext(gamepadAxs);
+
+        }, 0, 50, TimeUnit.MILLISECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            pollerCloseable.cancel(true);
+            pollerCloseable.cancel(true);
             axisStream.tryEmitComplete();
             buttonStream.tryEmitComplete();
             j.close();

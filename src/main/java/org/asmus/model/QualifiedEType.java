@@ -9,5 +9,6 @@ import lombok.With;
 @Builder
 public class QualifiedEType {
     EType type;
-    EPressType pressType;
+    EMultiplicity multiplicity;
+    boolean longPress;
 }

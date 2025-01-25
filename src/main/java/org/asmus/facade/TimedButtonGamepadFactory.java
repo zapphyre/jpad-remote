@@ -1,9 +1,7 @@
 package org.asmus.facade;
 
 import org.asmus.component.EventQualificator;
-import org.asmus.model.GamepadStateStream;
-import org.asmus.model.QualifiedEType;
-import org.asmus.model.StickMovement;
+import org.asmus.model.*;
 import org.asmus.service.JoyWorker;
 import org.asmus.tool.EventMapper;
 import org.asmus.tool.GamepadIntrospector;
@@ -25,9 +23,13 @@ public class TimedButtonGamepadFactory {
         return out.asFlux();
     }
 
-    public static Flux<StickMovement> getStickStream() {
+    public static Flux<PolarCoords> getLeftStickStream() {
         return stateStream.getAxisFlux()
-                .map(EventMapper::translateAxis)
-                ;
+                .map(new EventMapper(Gamepad::getLEFT_STICK_X, Gamepad::getLEFT_STICK_Y)::translateAxis);
+    }
+
+    public static Flux<PolarCoords> getRightStickStream() {
+        return stateStream.getAxisFlux()
+                .map(new EventMapper(Gamepad::getRIGHT_STICK_X, Gamepad::getRIGHT_STICK_Y)::translateAxis);
     }
 }

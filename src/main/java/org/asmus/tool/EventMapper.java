@@ -1,25 +1,30 @@
 package org.asmus.tool;
 
-import lombok.experimental.UtilityClass;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.asmus.model.Gamepad;
 import org.asmus.model.PolarCoords;
 import org.asmus.model.StickMovement;
 
-@UtilityClass
+import java.util.function.Function;
+
+@Value
+@RequiredArgsConstructor
 public class EventMapper {
 
-    public static StickMovement translateAxis(Gamepad gamepad) {
-        int yAxisLeft = gamepad.getLEFT_STICK_Y();
-        int xAxisLeft = gamepad.getLEFT_STICK_X();
+    Function<Gamepad, Integer> xGetter;
+    Function<Gamepad, Integer> yGetter;
+
+    public PolarCoords translateAxis(Gamepad gamepad) {
+        int yAxisLeft = yGetter.apply(gamepad);
+        int xAxisLeft = xGetter.apply(gamepad);
 
         double theta = getTheta(xAxisLeft, yAxisLeft);
         double r = getR(xAxisLeft, yAxisLeft);
 
-        return StickMovement.builder()
-                .left(PolarCoords.builder()
-                        .theta(theta)
-                        .radius(r)
-                        .build())
+        return PolarCoords.builder()
+                .theta(theta)
+                .radius(r)
                 .build();
     }
 

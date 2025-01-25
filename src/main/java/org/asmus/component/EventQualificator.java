@@ -27,12 +27,21 @@ public class EventQualificator {
     Sinks.Many<QualifiedEType> output;
 
     public void qualify(TVPair evt) {
-        multiplicityMap.computeIfPresent(evt, (k, v) -> v + 1);
         multiplicityMap.computeIfAbsent(evt, (k) -> 1);
 
         if (scheduledActionsMap.containsKey(evt)) {
             scheduledActionsMap.get(evt).cancel(true);
+
             scheduledActionsMap.remove(evt);
+            multiplicityMap.remove(evt);
+
+            output.tryEmitNext(QualifiedEType.builder()
+                    .type(translateBtn(evt))
+                    .multiplicity(EMultiplicity.DOUBLE)
+                    .longPress(computeIsLongPress(evt))
+                    .build());
+
+            return;
         }
 
         ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor()
@@ -42,7 +51,7 @@ public class EventQualificator {
 
                     output.tryEmitNext(QualifiedEType.builder()
                             .type(translateBtn(evt))
-                            .multiplicity(EMultiplicity.getByClickCount(pushes))
+                            .multiplicity(EMultiplicity.CLICK)
                             .longPress(computeIsLongPress(evt))
                             .build());
 

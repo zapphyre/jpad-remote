@@ -13,13 +13,9 @@ public enum EAxisGamepadEvt implements EPadEventReducible<Integer> {
 
     LEFT_STICK_X(0, g -> g::withLEFT_STICK_X),
     LEFT_STICK_Y(1, g -> g::withLEFT_STICK_Y),
-//    LEFT_STICK_LEFT(0, g -> g::withLEFT_STICK_LEFT),
-//    LEFT_STICK_RIGHT(0, g -> g::withLEFT_STICK_RIGHT),
 
-//    RIGHT_STICK_UP(0, g -> g::withDPAD_UP),
-//    RIGHT_STICK_DOWN(1, g -> g::withDPAD_DOWN),
-//    RIGHT_STICK_LEFT(2, g -> g::withDPAD_LEFT),
-//    RIGHT_STICK_RIGHT(3, g -> g::withDPAD_RIGHT),
+    RIGHT_STICK_X(2, g -> g::withRIGHT_STICK_X),
+    RIGHT_STICK_Y(3, g -> g::withRIGHT_STICK_Y),
     ;
 
     final int num;

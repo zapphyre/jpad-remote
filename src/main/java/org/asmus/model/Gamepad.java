@@ -29,10 +29,9 @@ public class Gamepad {
     int LEFT_STICK_X;
     boolean LEFT_STICK_CLICK;
 
-    int RIGHT_STICK_UP;
-    int RIGHT_STICK_DOWN;
-    int RIGHT_STICK_LEFT;
-    int RIGHT_STICK_RIGHT;
+    int RIGHT_STICK_X;
+    int RIGHT_STICK_Y;
+    int RIGHT_STICK_CLICK;
 
     boolean DPAD_LEFT_BUMPER;
     boolean DPAD_RIGHT_BUMPER;

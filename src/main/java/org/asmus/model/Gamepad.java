@@ -13,10 +13,8 @@ public class Gamepad {
     boolean X;
     boolean Y;
 
-    boolean LEFT;
-    boolean RIGHT;
-    boolean UP;
-    boolean DOWN;
+    int VERTICAL_BTN;
+    int HORIZONTAL_BTN;
 
     boolean LEFT_BUMPER;
     boolean RIGHT_BUMPER;

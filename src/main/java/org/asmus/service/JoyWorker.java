@@ -57,6 +57,13 @@ public class JoyWorker {
                     }
                 });
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            pollerCloseable.cancel(true);
+            axisStream.tryEmitComplete();
+            buttonStream.tryEmitComplete();
+            j.close();
+        }));
+
         return GamepadStateStream.builder()
                 .axisFlux(axisStream.asFlux())
                 .buttonFlux(buttonStream.asFlux())
@@ -86,58 +93,7 @@ public class JoyWorker {
                     .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
             axisStream.tryEmitNext(gamepadAxs);
 
-        }, 0, 50, TimeUnit.MILLISECONDS);
-
-//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            pollerCloseable.cancel(true);
-//            axisStream.tryEmitComplete();
-//            buttonStream.tryEmitComplete();
-//            j.close();
-//        }));
-    }
-
-    @SneakyThrows
-    public GamepadStateStream hookOn(GamepadDefinition definition) throws IOException {
-        LinuxJoystick j = new LinuxJoystick(definition.getDev(), definition.getButtons(), definition.getAxis());
-
-        GamepadInputGroupQuery<Boolean> buttonStatusGamepad = gamepadWith(j::getButtonState);
-        GamepadInputGroupQuery<Integer> axisStateGamepad = gamepadWith(j::getAxisState);
-
-        j.open();
-
-        Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
-            while (true) {
-
-                if (!j.isDeviceOpen()) continue;
-
-                j.poll();
-            }
-        });
-
-        ScheduledFuture<?> pollerCloseable = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            if (!j.isDeviceOpen() || !j.isChanged()) return;
-
-            Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
-            buttonStream.tryEmitNext(gamepadBtn);
-
-            Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
-            axisStream.tryEmitNext(gamepadAxs);
-
-        }, 0, 50, TimeUnit.MILLISECONDS);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            pollerCloseable.cancel(true);
-            axisStream.tryEmitComplete();
-            buttonStream.tryEmitComplete();
-            j.close();
-        }));
-
-        return GamepadStateStream.builder()
-                .axisFlux(axisStream.asFlux())
-                .buttonFlux(buttonStream.asFlux())
-                .build();
+        }, 0, 80, TimeUnit.MILLISECONDS);
     }
 
     <T> GamepadInputGroupQuery<T> gamepadWith(Function<Integer, T> getter) {

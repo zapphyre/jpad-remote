@@ -3,11 +3,13 @@ package org.asmus.model;
 import lombok.Builder;
 import lombok.Value;
 
+import java.nio.file.Path;
+
 @Value
 @Builder
 public class GamepadDefinition {
     @Builder.Default
-    String dev = "/dev/input/js0";
+    Path dev = Path.of("/", "dev", "input", "js0");
     int buttons = 11;
     int axis = 8;
 }

@@ -40,13 +40,12 @@ public class JoyWorker {
 
     @SneakyThrows
     public GamepadStateStream managedHooker(GamepadDefinition definition) {
-        LinuxJoystick j = new LinuxJoystick(definition.getDev(), definition.getButtons(), definition.getAxis());
-        Path gamepadPath = Path.of(definition.getDev());
+        LinuxJoystick j = new LinuxJoystick(definition.getDev().toString(), definition.getButtons(), definition.getAxis());
 
-        if (Files.exists(gamepadPath))
+        if (Files.exists(definition.getDev()))
             processEvents(j);
 
-        watch(gamepadPath)
+        watch(definition.getDev())
                 .forEvents(ENTRY_CREATE, ENTRY_DELETE)
                 .onChange(q -> {
                     if (q.kind() == ENTRY_CREATE) {

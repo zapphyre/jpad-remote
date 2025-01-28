@@ -17,10 +17,19 @@ public enum EType {
 
     LEFT_STICK_CLICK,
 
+    LEFT_STICK_MOVE,
+    RIGHT_STICK_MOVE,
+
     UP,
     DOWN,
     LEFT,
     RIGHT,
+
+    TRIGGER_LEFT,
+    TRIGGER_RIGHT,
+
+    LEFT_BUMPER,
+    RIGHT_BUMPER,
 
     FIZZY,
     ;

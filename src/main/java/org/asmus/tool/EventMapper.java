@@ -1,31 +1,28 @@
 package org.asmus.tool;
 
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
+import lombok.experimental.UtilityClass;
 import org.asmus.model.Gamepad;
 import org.asmus.model.PolarCoords;
-import org.asmus.model.StickMovement;
 
 import java.util.function.Function;
 
-@Value
-@RequiredArgsConstructor
+@UtilityClass
 public class EventMapper {
 
-    Function<Gamepad, Integer> xGetter;
-    Function<Gamepad, Integer> yGetter;
+    public static Function<Gamepad, PolarCoords> translateAxis(Function<Gamepad, Integer> getterX,
+                                                               Function<Gamepad, Integer> getterY) {
+        return q -> {
+            int yAxisLeft = getterY.apply(q);
+            int xAxisLeft = getterX.apply(q);
 
-    public PolarCoords translateAxis(Gamepad gamepad) {
-        int yAxisLeft = yGetter.apply(gamepad);
-        int xAxisLeft = xGetter.apply(gamepad);
+            double theta = getTheta(xAxisLeft, yAxisLeft);
+            double r = getR(xAxisLeft, yAxisLeft);
 
-        double theta = getTheta(xAxisLeft, yAxisLeft);
-        double r = getR(xAxisLeft, yAxisLeft);
-
-        return PolarCoords.builder()
-                .theta(theta)
-                .radius(r)
-                .build();
+            return PolarCoords.builder()
+                    .theta(theta)
+                    .radius(r)
+                    .build();
+        };
     }
 
     static double getTheta(double x, double y) {

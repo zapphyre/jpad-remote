@@ -8,8 +8,10 @@ import java.nio.file.Path;
 @Value
 @Builder
 public class GamepadDefinition {
+
     @Builder.Default
     Path dev = Path.of("/", "dev", "input", "js0");
-    int buttons = 11;
+
+    int buttons = 15;
     int axis = 8;
 }

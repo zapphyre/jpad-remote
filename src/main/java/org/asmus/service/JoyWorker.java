@@ -74,6 +74,7 @@ public class JoyWorker {
         Thread.sleep(100);
         j.open();
 
+        System.out.println(j.getNumButtons());
         GamepadInputGroupQuery<Boolean> buttonStatusGamepad = gamepadWith(j::getButtonState);
         GamepadInputGroupQuery<Integer> axisStateGamepad = gamepadWith(j::getAxisState);
 

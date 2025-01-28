@@ -2,12 +2,9 @@ package org.asmus.facade;
 
 import lombok.experimental.UtilityClass;
 import org.asmus.component.EventQualificator;
-import org.asmus.model.Gamepad;
-import org.asmus.model.GamepadStateStream;
-import org.asmus.model.PolarCoords;
-import org.asmus.model.QualifiedEType;
+import org.asmus.model.*;
 import org.asmus.service.JoyWorker;
-import org.asmus.tool.AxisButtonMapper;
+import org.asmus.tool.AxisMapper;
 import org.asmus.tool.EventMapper;
 import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
@@ -32,23 +29,43 @@ public class TimedButtonGamepadFactory {
     public static Flux<QualifiedEType> getArrowsStream() {
         Flux<QualifiedEType> vertical = stateStream.getAxisFlux()
                 .filter(q -> q.getVERTICAL_BTN() != 0)
-                .map(AxisButtonMapper.mapVertical);
+                .map(AxisMapper.mapVertical);
 
         Flux<QualifiedEType> horizontal = stateStream.getAxisFlux()
                 .filter(q -> q.getHORIZONTAL_BTN() != 0)
-                .map(AxisButtonMapper.mapHorizontal);
+                .map(AxisMapper.mapHorizontal);
 
         return Flux.merge(vertical, horizontal)
                 .publish().autoConnect();
     }
 
+    public static Flux<TriggerPosition> getTriggerStream() {
+        Flux<TriggerPosition> left = stateStream.getAxisFlux()
+                .distinctUntilChanged(Gamepad::getTRIGGER_LEFT)
+                .map(AxisMapper.getTriggerPosition(Gamepad::getTRIGGER_LEFT))
+                .map(q -> q.withType(EType.TRIGGER_LEFT));
+
+        Flux<TriggerPosition> right = stateStream.getAxisFlux()
+                .distinctUntilChanged(Gamepad::getTRIGGER_RIGHT)
+                .map(AxisMapper.getTriggerPosition(Gamepad::getTRIGGER_RIGHT))
+                .map(q -> q.withType(EType.TRIGGER_RIGHT));
+
+        return Flux.merge(left, right).publish().autoConnect();
+    }
+
     public static Flux<PolarCoords> getLeftStickStream() {
         return stateStream.getAxisFlux()
-                .map(new EventMapper(Gamepad::getLEFT_STICK_X, Gamepad::getLEFT_STICK_Y)::translateAxis);
+                .distinctUntilChanged(Gamepad::getLEFT_STICK_X)
+                .distinctUntilChanged(Gamepad::getLEFT_STICK_Y)
+                .map(EventMapper.translateAxis(Gamepad::getLEFT_STICK_X, Gamepad::getLEFT_STICK_Y))
+                .map(q -> q.withType(EType.LEFT_STICK_MOVE));
     }
 
     public static Flux<PolarCoords> getRightStickStream() {
         return stateStream.getAxisFlux()
-                .map(new EventMapper(Gamepad::getRIGHT_STICK_X, Gamepad::getRIGHT_STICK_Y)::translateAxis);
+                .distinctUntilChanged(Gamepad::getLEFT_STICK_X)
+                .distinctUntilChanged(Gamepad::getLEFT_STICK_Y)
+                .map(EventMapper.translateAxis(Gamepad::getRIGHT_STICK_X, Gamepad::getRIGHT_STICK_Y))
+                .map(q -> q.withType(EType.RIGHT_STICK_MOVE));
     }
 }

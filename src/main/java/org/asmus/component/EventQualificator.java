@@ -74,6 +74,8 @@ public class EventQualificator {
             case B -> EType.B;
             case X -> EType.X;
             case Y -> EType.Y;
+            case BUMPER_LEFT -> EType.LEFT_BUMPER;
+            case BUMPER_RIGHT -> EType.RIGHT_BUMPER;
             case START -> EType.START;
             case SELECT -> EType.SELECT;
             case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;

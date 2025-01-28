@@ -3,7 +3,7 @@ package org.asmus;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 
-import static org.asmus.facade.TimedButtonGamepadFactory.getButtonStream;
+import static org.asmus.facade.TimedButtonGamepadFactory.*;
 
 @Slf4j
 public class Main {

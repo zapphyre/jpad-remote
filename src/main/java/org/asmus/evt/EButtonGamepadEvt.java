@@ -13,11 +13,16 @@ public enum EButtonGamepadEvt implements EPadEventReducible<Boolean> {
 
     A(0, g -> g::withA),
     B(1, g -> g::withB),
-    X(2, g -> g::withX),
-    Y(3, g -> g::withY),
-    START(7, g -> g::withSTART),
-    SELECT(6, g -> g::withSELECT),
-    LEFT_STICK_CLICK(9, g -> g::withLEFT_STICK_CLICK),
+    X(3, g -> g::withX),
+    Y(4, g -> g::withY),
+
+    BUMPER_LEFT(6, g -> g::withBUMPER_LEFT),
+    BUMPER_RIGHT(7, g -> g::withBUMPER_RIGHT),
+
+    START(11, g -> g::withSTART),
+    SELECT(10, g -> g::withSELECT),
+
+    LEFT_STICK_CLICK(13, g -> g::withLEFT_STICK_CLICK),
     ;
 
     final int num;

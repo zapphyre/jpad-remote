@@ -16,8 +16,11 @@ public class Gamepad {
     int VERTICAL_BTN;
     int HORIZONTAL_BTN;
 
-    boolean LEFT_BUMPER;
-    boolean RIGHT_BUMPER;
+    boolean BUMPER_LEFT;
+    boolean BUMPER_RIGHT;
+
+    int TRIGGER_LEFT;
+    int TRIGGER_RIGHT;
 
     boolean BACK;
     boolean START;
@@ -30,10 +33,5 @@ public class Gamepad {
     int RIGHT_STICK_X;
     int RIGHT_STICK_Y;
     int RIGHT_STICK_CLICK;
-
-    boolean DPAD_LEFT_BUMPER;
-    boolean DPAD_RIGHT_BUMPER;
-    boolean DPAD_LEFT_TRIGGER;
-    boolean DPAD_RIGHT_TRIGGER;
 }
 

@@ -7,8 +7,7 @@ import lombok.With;
 @With
 @Value
 @Builder
-public class PolarCoords {
+public class TriggerPosition {
+    int position;
     EType type;
-    double radius;
-    double theta;
 }

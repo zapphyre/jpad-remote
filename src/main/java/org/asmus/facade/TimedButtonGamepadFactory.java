@@ -9,6 +9,8 @@ import org.asmus.tool.EventMapper;
 import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 @UtilityClass
 public class TimedButtonGamepadFactory {
@@ -20,10 +22,10 @@ public class TimedButtonGamepadFactory {
         EventQualificator eventQualificator = new EventQualificator(out);
 
         stateStream.getButtonFlux()
-                .mapNotNull(GamepadIntrospector::introspect)
+                .mapNotNull(GamepadIntrospector::releaseEvent)
                 .subscribe(eventQualificator::qualify);
 
-        return out.asFlux();
+        return out.asFlux().publish().autoConnect();
     }
 
     public static Flux<QualifiedEType> getArrowsStream() {
@@ -36,17 +38,21 @@ public class TimedButtonGamepadFactory {
                 .map(AxisMapper.mapHorizontal);
 
         return Flux.merge(vertical, horizontal)
+                .map(q -> Tuples.of(GamepadIntrospector.getHolding(), q))
+                .log()
+                .map(Tuple2::getT2)
+                .doOnCancel(getButtonStream()::subscribe)
                 .publish().autoConnect();
     }
 
     public static Flux<TriggerPosition> getTriggerStream() {
         Flux<TriggerPosition> left = stateStream.getAxisFlux()
-                .distinctUntilChanged(Gamepad::getTRIGGER_LEFT)
+//                .distinctUntilChanged(Gamepad::getTRIGGER_LEFT)
                 .map(AxisMapper.getTriggerPosition(Gamepad::getTRIGGER_LEFT))
                 .map(q -> q.withType(EType.TRIGGER_LEFT));
 
         Flux<TriggerPosition> right = stateStream.getAxisFlux()
-                .distinctUntilChanged(Gamepad::getTRIGGER_RIGHT)
+//                .distinctUntilChanged(Gamepad::getTRIGGER_RIGHT)
                 .map(AxisMapper.getTriggerPosition(Gamepad::getTRIGGER_RIGHT))
                 .map(q -> q.withType(EType.TRIGGER_RIGHT));
 

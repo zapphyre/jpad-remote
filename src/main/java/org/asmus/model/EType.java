@@ -28,8 +28,8 @@ public enum EType {
     TRIGGER_LEFT,
     TRIGGER_RIGHT,
 
-    LEFT_BUMPER,
-    RIGHT_BUMPER,
+    BUMPER_LEFT,
+    BUMPER_RIGHT,
 
     FIZZY,
     ;

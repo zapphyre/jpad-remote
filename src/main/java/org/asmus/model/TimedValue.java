@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 @Builder
 @EqualsAndHashCode
 public class TimedValue {
-    
     @Builder.Default
     @EqualsAndHashCode.Exclude
     LocalDateTime date = LocalDateTime.now();
+
     String name;
     String value;
 }

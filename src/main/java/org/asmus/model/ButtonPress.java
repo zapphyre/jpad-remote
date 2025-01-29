@@ -6,6 +6,6 @@ import lombok.Value;
 @Value
 @Builder
 public class ButtonPress {
-    TVPair starting;
-    TVPair ending;
+    ButtonClick starting;
+    ButtonClick ending;
 }

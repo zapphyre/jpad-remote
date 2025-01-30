@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class TimedValue {
     @Builder.Default
     @EqualsAndHashCode.Exclude
-    LocalDateTime date = LocalDateTime.now();
+    long time = System.currentTimeMillis();
 
     String name;
     boolean value;

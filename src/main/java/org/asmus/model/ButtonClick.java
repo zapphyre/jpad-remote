@@ -12,7 +12,7 @@ import java.util.Set;
 @Builder
 @EqualsAndHashCode
 public class ButtonClick {
-    Set<TimedValue> modifiers;
+    Set<String> modifiers;
 
     TimedValue push;
     TimedValue release;

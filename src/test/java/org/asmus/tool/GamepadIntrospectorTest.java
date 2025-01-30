@@ -12,7 +12,7 @@ public class GamepadIntrospectorTest {
 //                .BACK(true)
                 .build();
 
-        GamepadIntrospector.introspect(gpad);
+        GamepadIntrospector.releaseEvent(gpad);
 
         Assertions.assertFalse(gpad.isBACK());
     }

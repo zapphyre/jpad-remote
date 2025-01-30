@@ -9,8 +9,8 @@ import org.asmus.tool.EventMapper;
 import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
+
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class TimedButtonGamepadFactory {
@@ -38,9 +38,11 @@ public class TimedButtonGamepadFactory {
                 .map(AxisMapper.mapHorizontal);
 
         return Flux.merge(vertical, horizontal)
-                .map(q -> Tuples.of(GamepadIntrospector.getHolding(), q))
-                .log()
-                .map(Tuple2::getT2)
+                .map(q -> q.withModifiers(GamepadIntrospector.getModifiersResetEvents().stream()
+                        .map(String::toUpperCase)
+                        .map(EType::valueOf)
+                        .collect(Collectors.toList())
+                ))
                 .doOnCancel(getButtonStream()::subscribe)
                 .publish().autoConnect();
     }

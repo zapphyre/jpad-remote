@@ -61,18 +61,8 @@ public class GamepadIntrospector {
                 .filter(buttonWasPressedAndReleased)
                 .filter(notModifier)
                 .reduce(lastElement)
-                .map(q -> q.withModifiers(copyModifiers()))
+                .map(q -> q.withModifiers(getModifiersResetEvents()))
                 .orElse(null);
-    }
-
-    Set<String> copyModifiers() {
-        Set<String> modifierNames = holding.stream()
-                .map(TimedValue::getName)
-                .collect(Collectors.toSet());
-
-        modifiers.addAll(modifierNames);
-
-        return modifierNames;
     }
 
     BinaryOperator<ButtonClick> lastElement = (p, q) -> q;
@@ -98,6 +88,16 @@ public class GamepadIntrospector {
                 return null;
             }
         };
+    }
+
+    public Set<String> getModifiersResetEvents() {
+        Set<String> modifierNames = holding.stream()
+                .map(TimedValue::getName)
+                .collect(Collectors.toSet());
+
+        modifiers.addAll(modifierNames);
+
+        return modifierNames;
     }
 
 }

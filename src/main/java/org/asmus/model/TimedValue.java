@@ -15,5 +15,5 @@ public class TimedValue {
     LocalDateTime date = LocalDateTime.now();
 
     String name;
-    String value;
+    boolean value;
 }

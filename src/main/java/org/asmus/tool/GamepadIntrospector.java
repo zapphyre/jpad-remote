@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Slf4j
 @UtilityClass
@@ -60,16 +61,18 @@ public class GamepadIntrospector {
                 .filter(buttonWasPressedAndReleased)
                 .filter(notModifier)
                 .reduce(lastElement)
-                .map(q -> q.withModifiers(popAllModifiers()))
+                .map(q -> q.withModifiers(copyModifiers()))
                 .orElse(null);
     }
 
-    Set<TimedValue> popAllModifiers() {
-        holding.stream()
+    Set<String> copyModifiers() {
+        Set<String> modifierNames = holding.stream()
                 .map(TimedValue::getName)
-                .forEach(modifiers::add);
+                .collect(Collectors.toSet());
 
-        return new HashSet<>(holding);
+        modifiers.addAll(modifierNames);
+
+        return modifierNames;
     }
 
     BinaryOperator<ButtonClick> lastElement = (p, q) -> q;

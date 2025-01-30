@@ -3,15 +3,15 @@ package org.asmus.component;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.evt.EButtonGamepadEvt;
+import org.asmus.model.ButtonClick;
 import org.asmus.model.EMultiplicity;
 import org.asmus.model.EType;
 import org.asmus.model.QualifiedEType;
-import org.asmus.model.ButtonClick;
 import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -24,7 +24,7 @@ public class EventQualificator {
 
     Map<ButtonClick, ScheduledFuture<?>> scheduledActionsMap = new HashMap<>();
     Map<ButtonClick, Integer> multiplicityMap = new HashMap<>();
-    Duration longStep = Duration.ofMillis(210);
+    long longStep = 210;
 
     Sinks.Many<QualifiedEType> output;
 
@@ -38,11 +38,9 @@ public class EventQualificator {
             multiplicityMap.remove(evt);
 
             output.tryEmitNext(QualifiedEType.builder()
-                    .type(translateBtn(evt))
+                    .type(EType.valueOf(evt.getRelease().getName().toUpperCase()))
                     .multiplicity(EMultiplicity.DOUBLE)
-                    .modifiers(evt.getModifiers().stream()
-                            .map(q -> EType.valueOf(q.getName().toUpperCase()))
-                            .toList())
+                    .modifiers(convertModifiers(evt))
                     .longPress(computeIsLongPress(evt))
                     .build());
 
@@ -58,14 +56,8 @@ public class EventQualificator {
                             .type(EType.valueOf(evt.getRelease().getName().toUpperCase()))
                             .multiplicity(EMultiplicity.CLICK)
                             .longPress(computeIsLongPress(evt))
-                            .modifiers(evt.getModifiers().stream()
-                                    .map(q -> EType.valueOf(q.getName().toUpperCase()))
-                                    .toList())
+                            .modifiers(convertModifiers(evt))
                             .build());
-
-
-//                    scheduledActionsMap.keySet()
-//                                    .removeIf(q -> evt.getModifiers().contains(q.getPush()));
 
                     multiplicityMap.remove(evt);
                     scheduledActionsMap.remove(evt);
@@ -75,22 +67,14 @@ public class EventQualificator {
         scheduledActionsMap.put(evt, future);
     }
 
-    boolean computeIsLongPress(ButtonClick tvPair) {
-        return Duration.between(tvPair.getPush().getDate(), tvPair.getRelease().getDate())
-                .compareTo(longStep) >= 1;
+    List<EType> convertModifiers(ButtonClick click) {
+        return click.getModifiers().stream()
+                .map(String::toUpperCase)
+                .map(EType::valueOf)
+                .toList();
     }
 
-    EType translateBtn(ButtonClick tvPair) {
-        return switch (EButtonGamepadEvt.valueOf(tvPair.getRelease().getName().toUpperCase())) {
-            case A -> EType.A;
-            case B -> EType.B;
-            case X -> EType.X;
-            case Y -> EType.Y;
-            case BUMPER_LEFT -> EType.BUMPER_LEFT;
-            case BUMPER_RIGHT -> EType.BUMPER_RIGHT;
-            case START -> EType.START;
-            case SELECT -> EType.SELECT;
-            case LEFT_STICK_CLICK -> EType.LEFT_STICK_CLICK;
-        };
+    boolean computeIsLongPress(ButtonClick tvPair) {
+        return tvPair.getRelease().getTime() - tvPair.getPush().getTime() > longStep;
     }
 }

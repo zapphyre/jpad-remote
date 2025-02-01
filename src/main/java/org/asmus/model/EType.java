@@ -14,6 +14,7 @@ public enum EType {
 
     SELECT,
     START,
+    HOME,
 
     LEFT_STICK_CLICK,
 

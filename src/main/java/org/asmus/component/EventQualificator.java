@@ -46,22 +46,19 @@ public class EventQualificator {
             return;
         }
 
-        ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor()
-                .schedule(() -> {
+        ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+            Integer pushes = multiplicityMap.get(evt);
 
-                    Integer pushes = multiplicityMap.get(evt);
+            output.tryEmitNext(QualifiedEType.builder()
+                    .type(EType.valueOf(evt.getRelease().getName().toUpperCase()))
+                    .multiplicity(EMultiplicity.CLICK)
+                    .longPress(computeIsLongPress(evt))
+                    .modifiers(convertModifiers(evt))
+                    .build());
 
-                    output.tryEmitNext(QualifiedEType.builder()
-                            .type(EType.valueOf(evt.getRelease().getName().toUpperCase()))
-                            .multiplicity(EMultiplicity.CLICK)
-                            .longPress(computeIsLongPress(evt))
-                            .modifiers(convertModifiers(evt))
-                            .build());
-
-                    multiplicityMap.remove(evt);
-                    scheduledActionsMap.remove(evt);
-
-                }, 200, TimeUnit.MILLISECONDS);
+            multiplicityMap.remove(evt);
+            scheduledActionsMap.remove(evt);
+        }, 200, TimeUnit.MILLISECONDS);
 
         scheduledActionsMap.put(evt, future);
     }

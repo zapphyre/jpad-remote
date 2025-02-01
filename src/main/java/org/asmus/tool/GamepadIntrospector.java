@@ -23,10 +23,16 @@ import java.util.stream.Collectors;
 public class GamepadIntrospector {
 
     Map<String, TimedValue> values = new HashMap<>();
-
-    @Getter
     Set<TimedValue> holding = new LinkedHashSet<>();
     Set<String> modifiers = new HashSet<>();
+
+    BinaryOperator<ButtonClick> lastElement = (p, q) -> q;
+
+    Predicate<ButtonClick> buttonStateChanged = q -> q.getPush().isValue() != q.getRelease().isValue();
+    Predicate<ButtonClick> notModifier = q -> !modifiers.remove(q.getPush().getName());
+    Predicate<ButtonClick> buttonWasPressed = q -> holding.add(q.getPush());
+    Predicate<ButtonClick> buttonWasReleased = q -> holding.remove(q.getRelease()) && holding.remove(q.getPush());
+    Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
 
     static {
         try {
@@ -65,14 +71,6 @@ public class GamepadIntrospector {
                 .orElse(null);
     }
 
-    BinaryOperator<ButtonClick> lastElement = (p, q) -> q;
-
-    Predicate<ButtonClick> buttonStateChanged = q -> q.getPush().isValue() != q.getRelease().isValue();
-    Predicate<ButtonClick> notModifier = q -> !modifiers.remove(q.getPush().getName());
-    Predicate<ButtonClick> buttonWasPressed = q -> holding.add(q.getPush());
-    Predicate<ButtonClick> buttonWasReleased = q -> holding.remove(q.getRelease()) && holding.remove(q.getPush());
-    Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
-
     Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
         return descriptor -> TimedValue.builder()
                 .name(descriptor.getName())
@@ -91,13 +89,10 @@ public class GamepadIntrospector {
     }
 
     public Set<String> getModifiersResetEvents() {
-        Set<String> modifierNames = holding.stream()
+        return holding.stream()
                 .map(TimedValue::getName)
+                .peek(modifiers::add)
                 .collect(Collectors.toSet());
-
-        modifiers.addAll(modifierNames);
-
-        return modifierNames;
     }
 
 }

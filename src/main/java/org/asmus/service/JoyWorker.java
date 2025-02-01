@@ -11,9 +11,7 @@ import org.asmus.model.GamepadStateStream;
 import org.bbi.linuxjoy.LinuxJoystick;
 import reactor.core.publisher.Sinks;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -57,10 +55,12 @@ public class JoyWorker {
                 });
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            pollerCloseable.cancel(true);
+            j.close();
+            if (pollerCloseable != null)
+                pollerCloseable.cancel(true);
+
             axisStream.tryEmitComplete();
             buttonStream.tryEmitComplete();
-            j.close();
         }));
 
         return GamepadStateStream.builder()
@@ -78,22 +78,23 @@ public class JoyWorker {
         GamepadInputGroupQuery<Boolean> buttonStatusGamepad = gamepadWith(j::getButtonState);
         GamepadInputGroupQuery<Integer> axisStateGamepad = gamepadWith(j::getAxisState);
 
-        pollerCloseable = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            if (!j.isDeviceOpen()) return;
+        pollerCloseable = Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+            while (true) {
+                if (!j.isDeviceOpen()) return;
 
-            j.poll();
+                j.poll();
 
-            if (!j.isChanged()) return;
+                if (!j.isChanged()) return;
 
-            Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
-            buttonStream.tryEmitNext(gamepadBtn);
+                Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
+                        .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
+                buttonStream.tryEmitNext(gamepadBtn);
 
-            Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
-                    .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
-            axisStream.tryEmitNext(gamepadAxs);
-
-        }, 0, 80, TimeUnit.MILLISECONDS);
+                Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
+                        .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
+                axisStream.tryEmitNext(gamepadAxs);
+            }
+        }, 0, TimeUnit.MILLISECONDS);
     }
 
     <T> GamepadInputGroupQuery<T> gamepadWith(Function<Integer, T> getter) {

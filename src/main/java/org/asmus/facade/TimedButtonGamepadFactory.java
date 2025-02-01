@@ -10,12 +10,18 @@ import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @UtilityClass
 public class TimedButtonGamepadFactory {
 
     GamepadStateStream stateStream = new JoyWorker().hookOnDefault();
+
+    Predicate<Gamepad> notZeroFor(Function<Gamepad, Integer> getter) {
+        return q -> getter.apply(q) != 0;
+    }
 
     public static Flux<QualifiedEType> getButtonStream() {
         Sinks.Many<QualifiedEType> out = Sinks.many().multicast().directBestEffort();
@@ -30,11 +36,11 @@ public class TimedButtonGamepadFactory {
 
     public static Flux<QualifiedEType> getArrowsStream() {
         Flux<QualifiedEType> vertical = stateStream.getAxisFlux()
-                .filter(q -> q.getVERTICAL_BTN() != 0)
+                .filter(notZeroFor(Gamepad::getVERTICAL_BTN))
                 .map(AxisMapper.mapVertical);
 
         Flux<QualifiedEType> horizontal = stateStream.getAxisFlux()
-                .filter(q -> q.getHORIZONTAL_BTN() != 0)
+                .filter(notZeroFor(Gamepad::getHORIZONTAL_BTN))
                 .map(AxisMapper.mapHorizontal);
 
         return Flux.merge(vertical, horizontal)
@@ -63,16 +69,14 @@ public class TimedButtonGamepadFactory {
 
     public static Flux<PolarCoords> getLeftStickStream() {
         return stateStream.getAxisFlux()
-                .distinctUntilChanged(Gamepad::getLEFT_STICK_X)
-                .distinctUntilChanged(Gamepad::getLEFT_STICK_Y)
+                .filter(notZeroFor(Gamepad::getLEFT_STICK_X).or(notZeroFor(Gamepad::getLEFT_STICK_Y)))
                 .map(EventMapper.translateAxis(Gamepad::getLEFT_STICK_X, Gamepad::getLEFT_STICK_Y))
                 .map(q -> q.withType(EType.LEFT_STICK_MOVE));
     }
 
     public static Flux<PolarCoords> getRightStickStream() {
         return stateStream.getAxisFlux()
-                .distinctUntilChanged(Gamepad::getLEFT_STICK_X)
-                .distinctUntilChanged(Gamepad::getLEFT_STICK_Y)
+                .filter(notZeroFor(Gamepad::getRIGHT_STICK_X).or(notZeroFor(Gamepad::getRIGHT_STICK_Y)))
                 .map(EventMapper.translateAxis(Gamepad::getRIGHT_STICK_X, Gamepad::getRIGHT_STICK_Y))
                 .map(q -> q.withType(EType.RIGHT_STICK_MOVE));
     }

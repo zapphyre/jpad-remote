@@ -21,6 +21,7 @@ public enum EButtonGamepadEvt implements EPadEventReducible<Boolean> {
 
     START(11, g -> g::withSTART),
     SELECT(10, g -> g::withSELECT),
+    HOME(12, g -> g::withHOME),
 
     LEFT_STICK_CLICK(13, g -> g::withLEFT_STICK_CLICK),
     ;

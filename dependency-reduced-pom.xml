@@ -3,9 +3,34 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.asmus</groupId>
   <artifactId>jpad-remote</artifactId>
-  <version>3.1-SNAPSHOT</version>
+  <version>4.1-SNAPSHOT</version>
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>copy-c-program</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>lib/</directory>
+                  <includes>
+                    <include>gamepadPropsParametric</include>
+                    <include>gamecontrollerdb.txt</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
@@ -23,6 +48,16 @@
                   </includes>
                 </filter>
               </filters>
+              <transformers>
+                <transformer>
+                  <resource>lib/gamepadPropsParametric</resource>
+                  <file>${project.build.directory}/lib/gamepadPropsParametric</file>
+                </transformer>
+                <transformer>
+                  <resource>lib/gamecontrollerdb.txt</resource>
+                  <file>${project.build.directory}/lib/gamecontrollerdb.txt</file>
+                </transformer>
+              </transformers>
             </configuration>
           </execution>
         </executions>

@@ -9,5 +9,5 @@ import lombok.With;
 @Builder
 public class TriggerPosition {
     int position;
-    EType type;
+    EButtonAxisMapping type;
 }

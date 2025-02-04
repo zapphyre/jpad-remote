@@ -2,81 +2,80 @@ package org.asmus.service;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.evt.EAxisGamepadEvt;
-import org.asmus.evt.EButtonGamepadEvt;
-import org.asmus.function.GamepadInputGroupQuery;
-import org.asmus.model.Gamepad;
-import org.asmus.model.GamepadDefinition;
-import org.asmus.model.GamepadStateStream;
+import org.asmus.model.*;
 import org.bbi.linuxjoy.LinuxJoystick;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.nio.file.Files;
-import java.util.Arrays;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BinaryOperator;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
-import static fs.watcher.FsWatcher.watch;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.util.stream.Collectors.toMap;
+import static org.asmus.tool.SdlStringMapper.translate;
 
 @Slf4j
 public class JoyWorker {
 
-    private final Sinks.Many<Gamepad> buttonStream = Sinks.many().multicast().directBestEffort();
-    private final Sinks.Many<Gamepad> axisStream = Sinks.many().multicast().directBestEffort();
-    private final Gamepad gamepad = Gamepad.builder().build();
+    private final Sinks.Many<List<TimedValue>> buttonStream = Sinks.many().multicast().directBestEffort();
+    private final Sinks.Many<Map<String, Integer>> axisStream = Sinks.many().multicast().directBestEffort();
     private ScheduledFuture<?> pollerCloseable;
 
-    @SneakyThrows
-    public GamepadStateStream hookOnDefault() {
-        return managedHooker(GamepadDefinition.builder().build());
-    }
-
-    @SneakyThrows
-    public GamepadStateStream managedHooker(GamepadDefinition definition) {
-        LinuxJoystick j = new LinuxJoystick(definition.getDev().toString(), definition.getButtons(), definition.getAxis());
-
-        if (Files.exists(definition.getDev()))
-            processEvents(j);
-
-        watch(definition.getDev())
-                .forEvents(ENTRY_CREATE, ENTRY_DELETE)
-                .onChange(q -> {
-                    if (q.kind() == ENTRY_CREATE) {
-                        processEvents(j);
-                    } else {
-                        pollerCloseable.cancel(true);
-                        j.close();
-                    }
-                });
-
+    public JoyWorker() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            j.close();
             if (pollerCloseable != null)
                 pollerCloseable.cancel(true);
 
             axisStream.tryEmitComplete();
             buttonStream.tryEmitComplete();
         }));
-
-        return GamepadStateStream.builder()
-                .axisFlux(axisStream.asFlux())
-                .buttonFlux(buttonStream.asFlux())
-                .build();
     }
 
     @SneakyThrows
-    public void processEvents(LinuxJoystick j) {
+    public Runnable watchingDevice(Controller controller) {
+        LinuxJoystick j = new LinuxJoystick(controller.device(), controller.buttons(), controller.axes());
+
+        List<ButtonNamePosition> mappings = translate(controller.mapping());
+
+        List<ButtonNamePosition> axisMappings = mappings.stream()
+                .filter(ButtonNamePosition::axis)
+                .toList();
+
+        List<ButtonNamePosition> buttonMappings = mappings.stream()
+                .filter(Predicate.not(ButtonNamePosition::axis))
+                .toList();
+
+        ControllerDevice device = new ControllerDevice(axisMappings, buttonMappings, j);
+        Path path = Path.of(controller.device());
+
+        processEvents(device);
+
+        return () -> {
+            j.close();
+            pollerCloseable.cancel(true);
+        };
+    }
+
+    Function<List<ButtonNamePosition>, List<ButtonNamePosition>> mapToPosition(Predicate<ButtonNamePosition> predicate) {
+        return q -> q.stream()
+                .filter(predicate)
+                .toList();
+    }
+
+    @SneakyThrows
+    public void processEvents(ControllerDevice dev) {
         Thread.sleep(100);
+
+        LinuxJoystick j = dev.joystick();
         j.open();
 
-        System.out.println(j.getNumButtons());
-        GamepadInputGroupQuery<Boolean> buttonStatusGamepad = gamepadWith(j::getButtonState);
-        GamepadInputGroupQuery<Integer> axisStateGamepad = gamepadWith(j::getAxisState);
+        JoyStateMapper jMapper = new JoyStateMapper(j);
 
         pollerCloseable = Executors.newSingleThreadScheduledExecutor().schedule(() -> {
             while (true) {
@@ -86,20 +85,46 @@ public class JoyWorker {
 
                 if (!j.isChanged()) return;
 
-                Gamepad gamepadBtn = Arrays.stream(EButtonGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.accState(buttonStatusGamepad).apply(q, p), laterMerger);
-                buttonStream.tryEmitNext(gamepadBtn);
+                Map<String, Integer> axisVals = dev.axisMappings().stream()
+                        .map(jMapper.toIV(LinuxJoystick::getAxisState))
+                        .collect(toMap(InputValue::name, InputValue::value));
 
-                Gamepad gamepadAxs = Arrays.stream(EAxisGamepadEvt.values())
-                        .reduce(gamepad, (q, p) -> p.accState(axisStateGamepad).apply(q, p), laterMerger);
-                axisStream.tryEmitNext(gamepadAxs);
+                axisStream.tryEmitNext(axisVals);
+
+                List<TimedValue> buttonVals = dev.buttonMappings().stream()
+                        .map(jMapper.toIV(LinuxJoystick::getButtonState))
+                        .map(TimedValue::new)
+                        .toList();
+
+                buttonStream.tryEmitNext(buttonVals);
             }
         }, 0, TimeUnit.MILLISECONDS);
     }
 
-    <T> GamepadInputGroupQuery<T> gamepadWith(Function<Integer, T> getter) {
-        return idx -> witter -> witter.setTriggered(getter.apply(idx));
+
+    <T> Function<LinuxJoystick, Function<ButtonNamePosition, InputValue<T>>> genericMapper(BiFunction<LinuxJoystick, Integer, T> getter) {
+        return q -> p -> new InputValue<>(getter.apply(q, p.position()), p.buttonName());
     }
 
-    BinaryOperator<Gamepad> laterMerger = (p, q) -> q;
+    <T> Function<BiFunction<LinuxJoystick, Integer, T>, Function<ButtonNamePosition, InputValue<T>>> mapState(LinuxJoystick j) {
+        return q -> p -> new InputValue<>(q.apply(j, p.position()), p.buttonName());
+    }
+
+    <T> Function<LinuxJoystick, Function<BiFunction<LinuxJoystick, Integer, T>, Function<ButtonNamePosition, InputValue<T>>>> mapState() {
+        return j -> q -> p -> new InputValue<>(q.apply(j, p.position()), p.buttonName());
+    }
+
+    public Flux<List<TimedValue>> getButtonStream() {
+        return buttonStream.asFlux();
+    }
+
+    public Flux<Map<String, Integer>> getAxisStream() {
+        return axisStream.asFlux();
+    }
+
+    record JoyStateMapper(LinuxJoystick joystick) {
+        <T> Function<ButtonNamePosition, InputValue<T>> toIV(BiFunction<LinuxJoystick, Integer, T> getter) {
+            return q -> new InputValue<>(getter.apply(joystick, q.position()), q.buttonName());
+        }
+    }
 }

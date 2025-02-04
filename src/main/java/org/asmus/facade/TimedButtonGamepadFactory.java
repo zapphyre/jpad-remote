@@ -10,11 +10,10 @@ import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -131,10 +130,20 @@ public class TimedButtonGamepadFactory {
 
     public static Controller getControllerMappings(String path) {
         try {
-            String[] command = {"lib/gamepadPropsParametric", path};
+
+            InputStream in;
+            in = TimedButtonGamepadFactory.class.getResourceAsStream("lib/gamepadPropsParametric");
+            if (in == null) {
+                in = Files.newInputStream(Path.of("lib/gamepadPropsParametric"));
+            }
+
+            Path tempFile = Files.createTempFile("gamepadPropsParametric", null);
+            Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            tempFile.toFile().setExecutable(true);
+
+            ProcessBuilder processBuilder = new ProcessBuilder(tempFile.toString(), path);
 
             Thread.sleep(100);
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
 
             BufferedReader stdOut = new BufferedReader(new InputStreamReader(process.getInputStream()));

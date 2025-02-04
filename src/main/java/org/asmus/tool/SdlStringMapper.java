@@ -29,7 +29,7 @@ public class SdlStringMapper {
         }
     };
 
-    public List<ButtonNamePosition> translate(String input) {
+    public static List<ButtonNamePosition> translate(String input) {
         return Stream.of((input + "," + NamingConstants.ARROW_X + ":a6," + NamingConstants.ARROW_Y + ":a7").split(","))
                 .filter(hasColon)
                 .filter(analog.or(button))

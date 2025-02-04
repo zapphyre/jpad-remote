@@ -1,6 +1,6 @@
 package org.asmus.facade;
 
-import lombok.experimental.UtilityClass;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.asmus.component.EventQualificator;
 import org.asmus.model.*;
 import org.asmus.service.JoyWorker;
@@ -10,74 +10,141 @@ import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.util.function.Function;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@UtilityClass
+import static fs.watcher.FsWatcher.watch;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+
 public class TimedButtonGamepadFactory {
+    static ObjectMapper mapper = new ObjectMapper();
 
-    GamepadStateStream stateStream = new JoyWorker().hookOnDefault();
+    GamepadIntrospector introspector = new GamepadIntrospector();
+    JoyWorker worker = new JoyWorker();
 
-    Predicate<Gamepad> notZeroFor(Function<Gamepad, Integer> getter) {
-        return q -> getter.apply(q) != 0;
+    public List<Runnable> watchForDevices(Integer ...ids) {
+        return Arrays.stream(ids)
+                .map("/dev/input/js%01d"::formatted)
+                .peek(watchFsEvents(ENTRY_CREATE, ENTRY_DELETE))
+                .map(TimedButtonGamepadFactory::getControllerMappings)
+                .filter(Objects::nonNull)
+                .filter(pathExists)
+                .map(worker::watchingDevice)
+                .toList();
     }
 
-    public static Flux<QualifiedEType> getButtonStream() {
-        Sinks.Many<QualifiedEType> out = Sinks.many().multicast().directBestEffort();
+    Consumer<String> watchFsEvents(WatchEvent.Kind<?>... events) {
+        return q -> {
+            AtomicReference<Runnable> teardown = new AtomicReference<>(() -> {});
+
+            try {
+
+                watch(Path.of(q))
+                        .forEvents(events)
+                        .onChange(c -> {
+
+                            if (c.kind() == ENTRY_CREATE)
+                                Optional.of(c.path())
+                                        .map(Path::toString)
+                                        .map(TimedButtonGamepadFactory::getControllerMappings)
+                                        .map(worker::watchingDevice)
+                                        .ifPresent(teardown::set);
+                            else
+                                teardown.get().run();
+
+                        });
+
+            } catch (IOException e) {
+                teardown.get().run();
+            }
+        };
+    }
+
+    static Predicate<Controller> pathExists = q -> Files.exists(Path.of(q.device()));
+
+    static Predicate<Map<String, Integer>> notZeroFor(String axisName) {
+        return q -> q.get(axisName) != 0;
+    }
+
+    public Flux<GamepadEvent> getButtonStream() {
+        Sinks.Many<GamepadEvent> out = Sinks.many().multicast().directBestEffort();
         EventQualificator eventQualificator = new EventQualificator(out);
 
-        stateStream.getButtonFlux()
-                .mapNotNull(GamepadIntrospector::releaseEvent)
+        worker.getButtonStream()
+                .mapNotNull(introspector::releaseEvent)
                 .subscribe(eventQualificator::qualify);
 
         return out.asFlux().publish().autoConnect();
     }
 
-    public static Flux<QualifiedEType> getArrowsStream() {
-        Flux<QualifiedEType> vertical = stateStream.getAxisFlux()
-                .filter(notZeroFor(Gamepad::getVERTICAL_BTN))
+    public Flux<GamepadEvent> getArrowsStream() {
+        Flux<GamepadEvent> vertical = worker.getAxisStream()
+                .filter(notZeroFor(NamingConstants.ARROW_Y))
                 .map(AxisMapper.mapVertical);
 
-        Flux<QualifiedEType> horizontal = stateStream.getAxisFlux()
-                .filter(notZeroFor(Gamepad::getHORIZONTAL_BTN))
+        Flux<GamepadEvent> horizontal = worker.getAxisStream()
+                .filter(notZeroFor(NamingConstants.ARROW_X))
                 .map(AxisMapper.mapHorizontal);
 
         return Flux.merge(vertical, horizontal)
-                .map(q -> q.withModifiers(GamepadIntrospector.getModifiersResetEvents().stream()
-                        .map(String::toUpperCase)
-                        .map(EType::valueOf)
+                .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
+                        .map(EButtonAxisMapping::getByName)
                         .collect(Collectors.toList())
                 ))
                 .doOnCancel(getButtonStream()::subscribe)
                 .publish().autoConnect();
     }
 
-    public static Flux<TriggerPosition> getTriggerStream() {
-        Flux<TriggerPosition> left = stateStream.getAxisFlux()
-//                .distinctUntilChanged(Gamepad::getTRIGGER_LEFT)
-                .map(AxisMapper.getTriggerPosition(Gamepad::getTRIGGER_LEFT))
-                .map(q -> q.withType(EType.TRIGGER_LEFT));
+    public Flux<TriggerPosition> getTriggerStream() {
+        Flux<TriggerPosition> left = worker.getAxisStream()
+                .map(AxisMapper.getTriggerPosition(NamingConstants.LEFT_TRIGGER))
+                .map(q -> q.withType(EButtonAxisMapping.TRIGGER_LEFT));
 
-        Flux<TriggerPosition> right = stateStream.getAxisFlux()
-//                .distinctUntilChanged(Gamepad::getTRIGGER_RIGHT)
-                .map(AxisMapper.getTriggerPosition(Gamepad::getTRIGGER_RIGHT))
-                .map(q -> q.withType(EType.TRIGGER_RIGHT));
+        Flux<TriggerPosition> right = worker.getAxisStream()
+                .map(AxisMapper.getTriggerPosition(NamingConstants.RIGHT_TRIGGER))
+                .map(q -> q.withType(EButtonAxisMapping.TRIGGER_RIGHT));
 
         return Flux.merge(left, right).publish().autoConnect();
     }
 
-    public static Flux<PolarCoords> getLeftStickStream() {
-        return stateStream.getAxisFlux()
-                .filter(notZeroFor(Gamepad::getLEFT_STICK_X).or(notZeroFor(Gamepad::getLEFT_STICK_Y)))
-                .map(EventMapper.translateAxis(Gamepad::getLEFT_STICK_X, Gamepad::getLEFT_STICK_Y))
-                .map(q -> q.withType(EType.LEFT_STICK_MOVE));
+    public Flux<PolarCoords> getLeftStickStream() {
+        return worker.getAxisStream()
+                .filter(notZeroFor(NamingConstants.LEFT_STICK_X).or(notZeroFor(NamingConstants.LEFT_STICK_Y)))
+                .map(EventMapper.translateAxis(NamingConstants.LEFT_STICK_X, NamingConstants.LEFT_STICK_Y));
     }
 
-    public static Flux<PolarCoords> getRightStickStream() {
-        return stateStream.getAxisFlux()
-                .filter(notZeroFor(Gamepad::getRIGHT_STICK_X).or(notZeroFor(Gamepad::getRIGHT_STICK_Y)))
-                .map(EventMapper.translateAxis(Gamepad::getRIGHT_STICK_X, Gamepad::getRIGHT_STICK_Y))
-                .map(q -> q.withType(EType.RIGHT_STICK_MOVE));
+    public Flux<PolarCoords> getRightStickStream() {
+        return worker.getAxisStream()
+                .filter(notZeroFor(NamingConstants.RIGHT_STICK_X).or(notZeroFor(NamingConstants.RIGHT_STICK_Y)))
+                .map(EventMapper.translateAxis(NamingConstants.RIGHT_STICK_X, NamingConstants.RIGHT_STICK_Y));
+    }
+
+    public static Controller getControllerMappings(String path) {
+        try {
+            String[] command = {"lib/gamepadPropsParametric", path};
+
+            Thread.sleep(100);
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Process process = processBuilder.start();
+
+            BufferedReader stdOut = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String stdOutStr = stdOut.lines()
+                    .collect(Collectors.joining(System.lineSeparator()));
+
+            return mapper.readValue(stdOutStr, Controller.class);
+        } catch (IOException | InterruptedException e) {
+        }
+
+        return null;
     }
 }

@@ -1,19 +1,25 @@
 package org.asmus.model;
 
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.time.LocalDateTime;
-
 @Value
-@Builder
 @EqualsAndHashCode
 public class TimedValue {
-    @Builder.Default
     @EqualsAndHashCode.Exclude
     long time = System.currentTimeMillis();
 
     String name;
     boolean value;
+
+    public TimedValue(String name) {
+        this.name = name;
+        this.value = false;
+    }
+
+    public TimedValue(InputValue<Boolean> iv) {
+        this.name = iv.name();
+        this.value = iv.value();
+    }
+
 }

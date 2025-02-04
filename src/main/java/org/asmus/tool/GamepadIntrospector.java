@@ -1,25 +1,17 @@
 package org.asmus.tool;
 
-import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.ButtonClick;
-import org.asmus.model.Gamepad;
 import org.asmus.model.TimedValue;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Slf4j
-@UtilityClass
 public class GamepadIntrospector {
 
     Map<String, TimedValue> values = new HashMap<>();
@@ -34,20 +26,8 @@ public class GamepadIntrospector {
     Predicate<ButtonClick> buttonWasReleased = q -> holding.remove(q.getRelease()) && holding.remove(q.getPush());
     Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
 
-    static {
-        try {
-            Arrays.stream(Introspector.getBeanInfo(Gamepad.builder().build().getClass()).getPropertyDescriptors())
-                    .map(toTimedValueFor(Gamepad.builder().build()))
-                    .forEach(q -> values.put(q.getName(), q));
-
-            log.info("introspector initialized #{} states of Gamepad buttons", values.size());
-        } catch (IntrospectionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     Function<TimedValue, ButtonClick> pairWithPreviousValue = current -> {
-        TimedValue previous = values.get(current.getName());
+        TimedValue previous = values.computeIfAbsent(current.getName(), TimedValue::new);
 
         if (!current.equals(previous))
             values.put(current.getName(), current);
@@ -59,9 +39,8 @@ public class GamepadIntrospector {
     };
 
     @SneakyThrows
-    public ButtonClick releaseEvent(Gamepad gamepad) {
-        return Arrays.stream(Introspector.getBeanInfo(gamepad.getClass()).getPropertyDescriptors())
-                .map(toTimedValueFor(gamepad))
+    public ButtonClick releaseEvent(List<TimedValue> values) {
+        return values.stream()
                 .map(pairWithPreviousValue)
                 .filter(buttonStateChanged)
                 .filter(buttonWasPressedAndReleased)
@@ -69,23 +48,6 @@ public class GamepadIntrospector {
                 .reduce(lastElement)
                 .map(q -> q.withModifiers(getModifiersResetEvents()))
                 .orElse(null);
-    }
-
-    Function<PropertyDescriptor, TimedValue> toTimedValueFor(Gamepad gamepad) {
-        return descriptor -> TimedValue.builder()
-                .name(descriptor.getName())
-                .value(invokeRealSafe(gamepad).apply(descriptor))
-                .build();
-    }
-
-    Function<PropertyDescriptor, Boolean> invokeRealSafe(Gamepad gamepad) {
-        return descriptor -> {
-            try {
-                return Boolean.valueOf(descriptor.getReadMethod().invoke(gamepad).toString());
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                return null;
-            }
-        };
     }
 
     public Set<String> getModifiersResetEvents() {

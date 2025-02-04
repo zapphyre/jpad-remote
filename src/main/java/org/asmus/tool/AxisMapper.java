@@ -1,33 +1,31 @@
 package org.asmus.tool;
 
 import lombok.experimental.UtilityClass;
-import org.asmus.model.EType;
-import org.asmus.model.Gamepad;
-import org.asmus.model.QualifiedEType;
-import org.asmus.model.TriggerPosition;
+import org.asmus.model.*;
 
+import java.util.Map;
 import java.util.function.Function;
 
 @UtilityClass
 public class AxisMapper {
 
-    public static Function<Gamepad, QualifiedEType> mapVertical = q -> q.getVERTICAL_BTN() > 0 ?
-            QualifiedEType.builder()
-                    .type(EType.DOWN)
-                    .build() : QualifiedEType.builder()
-            .type(EType.UP)
+    public static Function<Map<String, Integer>, GamepadEvent> mapVertical = q -> q.get(NamingConstants.ARROW_Y) > 0 ?
+            GamepadEvent.builder()
+                    .type(EButtonAxisMapping.DOWN)
+                    .build() : GamepadEvent.builder()
+            .type(EButtonAxisMapping.UP)
             .build();
 
-    public static Function<Gamepad, QualifiedEType> mapHorizontal = q -> q.getHORIZONTAL_BTN() > 0 ?
-            QualifiedEType.builder()
-                    .type(EType.RIGHT)
-                    .build() : QualifiedEType.builder()
-            .type(EType.LEFT)
+    public static Function<Map<String, Integer>, GamepadEvent> mapHorizontal = q -> q.get(NamingConstants.ARROW_X) > 0 ?
+            GamepadEvent.builder()
+                    .type(EButtonAxisMapping.RIGHT)
+                    .build() : GamepadEvent.builder()
+            .type(EButtonAxisMapping.LEFT)
             .build();
 
-    public static Function<Gamepad, TriggerPosition> getTriggerPosition(Function<Gamepad, Integer> getter) {
+    public static Function<Map<String, Integer>, TriggerPosition> getTriggerPosition(String axisName) {
         return q -> TriggerPosition.builder()
-                .position(getter.apply(q))
+                .position(q.get(axisName))
                 .build();
     }
 }

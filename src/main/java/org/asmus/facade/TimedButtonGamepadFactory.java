@@ -1,6 +1,7 @@
 package org.asmus.facade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.asmus.component.EventQualificator;
 import org.asmus.model.*;
 import org.asmus.service.JoyWorker;
@@ -10,7 +11,10 @@ import org.asmus.tool.GamepadIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -25,6 +29,7 @@ import static fs.watcher.FsWatcher.watch;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 
+@Slf4j
 public class TimedButtonGamepadFactory {
     static ObjectMapper mapper = new ObjectMapper();
 
@@ -132,7 +137,7 @@ public class TimedButtonGamepadFactory {
         try {
 
             InputStream in;
-            in = TimedButtonGamepadFactory.class.getResourceAsStream("lib/gamepadPropsParametric");
+            in = TimedButtonGamepadFactory.class.getResourceAsStream("/lib/gamepadPropsParametric");
             if (in == null) {
                 in = Files.newInputStream(Path.of("lib/gamepadPropsParametric"));
             }
@@ -143,13 +148,14 @@ public class TimedButtonGamepadFactory {
 
             ProcessBuilder processBuilder = new ProcessBuilder(tempFile.toString(), path);
 
-            Thread.sleep(100);
+            Thread.sleep(200);
             Process process = processBuilder.start();
 
             BufferedReader stdOut = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String stdOutStr = stdOut.lines()
                     .collect(Collectors.joining(System.lineSeparator()));
 
+            log.info(stdOutStr);
             return mapper.readValue(stdOutStr, Controller.class);
         } catch (IOException | InterruptedException e) {
         }

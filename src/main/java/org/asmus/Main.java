@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         TimedButtonGamepadFactory timedButtonGamepadFactory = new TimedButtonGamepadFactory();
 
-        timedButtonGamepadFactory.watchForDevices(0, 1);
+        timedButtonGamepadFactory.watchForDevices( 0, 1);
 
         Flux<GamepadEvent> publish = timedButtonGamepadFactory.getButtonStream()
                 .publish()

@@ -3,7 +3,6 @@ package org.asmus.tool;
 import lombok.experimental.UtilityClass;
 import org.asmus.model.ButtonNamePosition;
 import org.asmus.model.NamingConstants;
-import org.bbi.linuxjoy.LinuxJoystick;
 
 import java.util.List;
 import java.util.Objects;

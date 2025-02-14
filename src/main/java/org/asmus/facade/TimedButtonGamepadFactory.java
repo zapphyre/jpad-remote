@@ -22,6 +22,7 @@ import java.nio.file.WatchEvent;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -103,11 +104,13 @@ public class TimedButtonGamepadFactory {
         return Flux.merge(vertical, horizontal)
                 .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByName)
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toSet())
                 ))
                 .doOnCancel(getButtonStream()::subscribe)
                 .publish().autoConnect();
     }
+
+    Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
 
     public Flux<TriggerPosition> getTriggerStream() {
         Flux<TriggerPosition> left = worker.getAxisStream()
@@ -118,7 +121,15 @@ public class TimedButtonGamepadFactory {
                 .map(AxisMapper.getTriggerPosition(NamingConstants.RIGHT_TRIGGER))
                 .map(q -> q.withType(EButtonAxisMapping.TRIGGER_RIGHT));
 
-        return Flux.merge(left, right).publish().autoConnect();
+        Flux<TriggerPosition> triggers = Flux.merge(left, right).publish().autoConnect();
+
+        return triggers
+                .filter(triggerEngaged)
+                .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
+                        .map(EButtonAxisMapping::getByName)
+                        .collect(Collectors.toSet())
+                ))
+                .doOnCancel(getButtonStream()::subscribe);
     }
 
     public Flux<PolarCoords> getLeftStickStream() {

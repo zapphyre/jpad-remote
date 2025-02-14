@@ -1,8 +1,6 @@
 package org.asmus.tool;
 
 import lombok.SneakyThrows;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.TimedValue;
 
@@ -53,8 +51,7 @@ public class GamepadIntrospector {
     public Set<String> getModifiersResetEvents() {
         return holding.stream()
                 .map(TimedValue::getName)
-                .peek(modifiers::add)
+                .peek(modifiers::add) // adding holding button as a modifier will later reset them by `notModifier` predicate
                 .collect(Collectors.toSet());
     }
-
 }

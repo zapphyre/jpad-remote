@@ -9,10 +9,12 @@ import reactor.core.publisher.Sinks;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Value
@@ -53,10 +55,10 @@ public class EventQualificator {
                 .build();
     }
 
-    List<EButtonAxisMapping> convertModifiers(ButtonClick click) {
+    Set<EButtonAxisMapping> convertModifiers(ButtonClick click) {
         return click.getModifiers().stream()
                 .map(EButtonAxisMapping::getByName)
-                .toList();
+                .collect(Collectors.toSet());
     }
 
     boolean computeIsLongPress(ButtonClick tvPair) {

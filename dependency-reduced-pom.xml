@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.asmus</groupId>
   <artifactId>jpad-remote</artifactId>
-  <version>4.1-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
   <build>
     <plugins>
       <plugin>
@@ -95,9 +95,9 @@
   <properties>
     <lombok.version>1.18.36</lombok.version>
     <fs.watcher.version>1.0-SNAPSHOT</fs.watcher.version>
-    <maven.compiler.target>23</maven.compiler.target>
+    <maven.compiler.target>21</maven.compiler.target>
     <slf4j.version>2.0.16</slf4j.version>
-    <maven.compiler.source>23</maven.compiler.source>
+    <maven.compiler.source>21</maven.compiler.source>
     <reactor.version>3.6.5</reactor.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.11.3</junit.version>

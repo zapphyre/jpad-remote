@@ -10,9 +10,7 @@ import reactor.core.publisher.Sinks;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -41,6 +39,7 @@ public class JoyWorker {
     public Runnable watchingDevice(Controller controller) {
         LinuxJoystick j = new LinuxJoystick(controller.device(), controller.buttons(), controller.axes());
 
+//        Xbox One Wireless Controller
         List<ButtonNamePosition> mappings = translate(controller.mapping());
 
         List<ButtonNamePosition> axisMappings = mappings.stream()

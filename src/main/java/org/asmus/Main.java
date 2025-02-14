@@ -16,16 +16,17 @@ public class Main {
 
         timedButtonGamepadFactory.watchForDevices( 0, 1);
 
-        Flux<GamepadEvent> publish = timedButtonGamepadFactory.getButtonStream()
-                .publish()
-                .autoConnect();
-
-        Disposable disposable = publish
-                .log()
-                .subscribe();
+        timedButtonGamepadFactory.getButtonStream()
+                .subscribe(System.out::println);
 
         timedButtonGamepadFactory.getArrowsStream()
                 .subscribe(System.out::println);
+
+        timedButtonGamepadFactory.getTriggerStream()
+                .subscribe(System.out::println);
+//
+//        timedButtonGamepadFactory.getArrowsStream()
+//                .subscribe(System.out::println);
     }
 
 

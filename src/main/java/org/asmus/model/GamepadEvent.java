@@ -5,6 +5,7 @@ import lombok.Value;
 import lombok.With;
 
 import java.util.List;
+import java.util.Set;
 
 @With
 @Value
@@ -14,5 +15,5 @@ public class GamepadEvent {
     String eventName;
     EMultiplicity multiplicity;
     boolean longPress;
-    List<EButtonAxisMapping> modifiers;
+    Set<EButtonAxisMapping> modifiers;
 }

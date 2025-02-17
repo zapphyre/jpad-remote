@@ -19,11 +19,11 @@ public class Main {
         timedButtonGamepadFactory.getButtonStream()
                 .subscribe(System.out::println);
 
-        timedButtonGamepadFactory.getArrowsStream()
-                .subscribe(System.out::println);
-
-        timedButtonGamepadFactory.getTriggerStream()
-                .subscribe(System.out::println);
+//        timedButtonGamepadFactory.getArrowsStream()
+//                .subscribe(System.out::println);
+//
+//        timedButtonGamepadFactory.getTriggerStream()
+//                .subscribe(System.out::println);
 //
 //        timedButtonGamepadFactory.getArrowsStream()
 //                .subscribe(System.out::println);

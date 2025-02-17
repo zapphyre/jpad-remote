@@ -91,13 +91,15 @@ public class TimedButtonGamepadFactory {
 
     public Flux<GamepadEvent> getButtonStream() {
         Introspector introspector = new BothIntrospector();
-        Qualifier qualifier = new TimedQualifier();
 
-        return worker.getButtonStream()
+        Sinks.Many<GamepadEvent> out = Sinks.many().multicast().directBestEffort();
+        Qualifier qualifier = new AutoLongClickQualifier(out);
+
+        worker.getButtonStream()
                 .mapNotNull(introspector::translate)
-                .handle(qualifier.qualify())
-//                .handle(qualifier.qualify())
-                .publish().autoConnect();
+                .subscribe(qualifier::qualify);
+
+        return out.asFlux().publish().autoConnect();
     }
 
     public Flux<GamepadEvent> getArrowsStream() {

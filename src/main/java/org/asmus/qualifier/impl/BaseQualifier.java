@@ -1,16 +1,20 @@
 package org.asmus.qualifier.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.EButtonAxisMapping;
 import org.asmus.model.GamepadEvent;
 import org.asmus.qualifier.Qualifier;
+import reactor.core.publisher.Sinks;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public abstract class BaseQualifier implements Qualifier {
 
     long longStep = 210;
+    final Sinks.Many<GamepadEvent> output;
 
     GamepadEvent toGamepadEventWith(ButtonClick q) {
         return GamepadEvent.builder()

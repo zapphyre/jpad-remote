@@ -14,6 +14,7 @@ public class BothIntrospector extends BaseIntrospector{
         return states.stream()
                 .map(pairWithPreviousValue)
                 .filter(buttonStateChanged)
+//                .peek(q -> System.out.println("ButtonStateChanged: " + q))
                 .reduce(lastElement)
                 .orElse(null);
     }

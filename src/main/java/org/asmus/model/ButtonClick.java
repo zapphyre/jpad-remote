@@ -12,7 +12,8 @@ import java.util.Set;
 @Builder
 @EqualsAndHashCode
 public class ButtonClick {
-    Set<String> modifiers;
+    @Builder.Default
+    Set<String> modifiers = Set.of();
 
     TimedValue push;
     TimedValue release;

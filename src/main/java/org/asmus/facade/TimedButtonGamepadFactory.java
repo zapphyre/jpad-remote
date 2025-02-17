@@ -2,14 +2,22 @@ package org.asmus.facade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.component.EventQualificator;
+import org.asmus.introspect.Introspector;
+import org.asmus.introspect.impl.BothIntrospector;
+import org.asmus.introspect.impl.PushIntrospector;
+import org.asmus.qualifier.Qualifier;
+import org.asmus.qualifier.impl.AutoLongClickQualifier;
+import org.asmus.qualifier.impl.BaseQualifier;
+import org.asmus.qualifier.impl.ImmediateQualifier;
+import org.asmus.qualifier.impl.TimedQualifier;
 import org.asmus.model.*;
 import org.asmus.service.JoyWorker;
 import org.asmus.tool.AxisMapper;
 import org.asmus.tool.EventMapper;
-import org.asmus.tool.GamepadIntrospector;
+import org.asmus.introspect.impl.ReleaseIntrospector;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.publisher.SynchronousSink;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,8 +29,8 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -34,7 +42,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 public class TimedButtonGamepadFactory {
     static ObjectMapper mapper = new ObjectMapper();
 
-    GamepadIntrospector introspector = new GamepadIntrospector();
+    ReleaseIntrospector introspector = new ReleaseIntrospector();
     JoyWorker worker = new JoyWorker();
 
     public List<Runnable> watchForDevices(Integer ...ids) {
@@ -82,14 +90,14 @@ public class TimedButtonGamepadFactory {
     }
 
     public Flux<GamepadEvent> getButtonStream() {
-        Sinks.Many<GamepadEvent> out = Sinks.many().multicast().directBestEffort();
-        EventQualificator eventQualificator = new EventQualificator(out);
+        Introspector introspector = new BothIntrospector();
+        Qualifier qualifier = new TimedQualifier();
 
-        worker.getButtonStream()
-                .mapNotNull(introspector::releaseEvent)
-                .subscribe(eventQualificator::qualify);
-
-        return out.asFlux().publish().autoConnect();
+        return worker.getButtonStream()
+                .mapNotNull(introspector::translate)
+                .handle(qualifier.qualify())
+//                .handle(qualifier.qualify())
+                .publish().autoConnect();
     }
 
     public Flux<GamepadEvent> getArrowsStream() {

@@ -1,5 +1,6 @@
 package org.asmus.tool;
 
+import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.InputValue;
 import org.asmus.model.TimedValue;
@@ -10,13 +11,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GamepadIntrospectorTest {
+class ReleaseIntrospectorTest {
 
-    private GamepadIntrospector introspector;
+    private ReleaseIntrospector introspector;
 
     @BeforeEach
     void setUp() {
-        introspector = new GamepadIntrospector();
+        introspector = new ReleaseIntrospector();
     }
 
     @Test

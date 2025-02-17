@@ -15,6 +15,6 @@ public class ImmediateQualifier extends BaseQualifier {
 
     @Override
     public void qualify(ButtonClick click) {
-        output.tryEmitNext(toGamepadEventWith(click));
+        output.tryEmitNext(toGamepadEventWith(click).withLongPress(false));
     }
 }

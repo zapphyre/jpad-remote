@@ -39,7 +39,6 @@ public class JoyWorker {
     public Runnable watchingDevice(Controller controller) {
         LinuxJoystick j = new LinuxJoystick(controller.device(), controller.buttons(), controller.axes());
 
-//        Xbox One Wireless Controller
         List<ButtonNamePosition> mappings = translate(controller.mapping());
 
         List<ButtonNamePosition> axisMappings = mappings.stream()

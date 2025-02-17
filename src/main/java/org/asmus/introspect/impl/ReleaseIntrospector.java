@@ -6,10 +6,9 @@ import org.asmus.model.ButtonClick;
 import org.asmus.model.TimedValue;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -22,14 +21,15 @@ public class ReleaseIntrospector extends BaseIntrospector {
     Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
 
     @SneakyThrows
-    public ButtonClick translate(List<TimedValue> values) {
-        return values.stream()
+    public Function<List<TimedValue>, ButtonClick> translate(List<String> forButtonNames) {
+        return q -> q.stream()
+                .filter(relevantButtonAction(forButtonNames))
                 .map(pairWithPreviousValue)
                 .filter(buttonStateChanged)
                 .filter(buttonWasPressedAndReleased)
                 .filter(notModifier)
                 .reduce(lastElement)
-                .map(q -> q.withModifiers(getModifiersResetEvents()))
+                .map(c -> c.withModifiers(getModifiersResetEvents()))
                 .orElse(null);
     }
 

@@ -25,15 +25,6 @@ public class TimedQualifier extends BaseQualifier {
         super(output);
     }
 
-    public BiConsumer<ButtonClick, SynchronousSink<GamepadEvent>> qualify() {
-        return (evt, sink) -> {
-            if (scheduledActionsMap.containsKey(evt))
-                propagateEvent(evt, EMultiplicity.DOUBLE);
-            else
-                scheduledActionsMap.put(evt, new PendingClick(Executors.newSingleThreadScheduledExecutor().schedule(() -> propagateEvent(evt, EMultiplicity.CLICK), 200, TimeUnit.MILLISECONDS), toGamepadEventWith(evt)));
-        };
-    }
-
     void propagateEvent(ButtonClick evt, EMultiplicity multiplicity) {
         Optional.ofNullable(evt)
                 .map(scheduledActionsMap::remove)
@@ -49,10 +40,14 @@ public class TimedQualifier extends BaseQualifier {
 
     @Override
     public void qualify(ButtonClick evt) {
-        if (scheduledActionsMap.containsKey(evt))
+        if (scheduledActionsMap.containsKey(evt)) {
             propagateEvent(evt, EMultiplicity.DOUBLE);
-        else
-            scheduledActionsMap.put(evt, new PendingClick(Executors.newSingleThreadScheduledExecutor().schedule(() -> propagateEvent(evt, EMultiplicity.CLICK), longStep, TimeUnit.MILLISECONDS), toGamepadEventWith(evt)));
+        } else {
+            ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor()
+                    .schedule(() -> propagateEvent(evt, EMultiplicity.CLICK), longStep, TimeUnit.MILLISECONDS);
+
+            scheduledActionsMap.put(evt, new PendingClick(future, toGamepadEventWith(evt)));
+        }
     };
 
 

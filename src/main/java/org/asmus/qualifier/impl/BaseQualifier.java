@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public abstract class BaseQualifier implements Qualifier {
 
-    long longStep = 210;
+    long longStep = 420;
     final Sinks.Many<GamepadEvent> output;
 
     GamepadEvent toGamepadEventWith(ButtonClick q) {

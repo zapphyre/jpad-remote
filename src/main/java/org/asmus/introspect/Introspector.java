@@ -4,8 +4,9 @@ import org.asmus.model.ButtonClick;
 import org.asmus.model.TimedValue;
 
 import java.util.List;
+import java.util.function.Function;
 
 public interface Introspector {
 
-    ButtonClick translate(List<TimedValue> states);
+    Function<List<TimedValue>, ButtonClick> translate(List<String> forButtonNames);
 }

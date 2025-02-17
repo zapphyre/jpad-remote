@@ -62,6 +62,6 @@ public class EventQualificator {
     }
 
     boolean computeIsLongPress(ButtonClick tvPair) {
-        return tvPair.getRelease().getTime() - tvPair.getPush().getTime() > longStep;
+        return false;
     }
 }

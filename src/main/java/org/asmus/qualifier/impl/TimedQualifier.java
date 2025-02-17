@@ -52,7 +52,7 @@ public class TimedQualifier extends BaseQualifier {
         if (scheduledActionsMap.containsKey(evt))
             propagateEvent(evt, EMultiplicity.DOUBLE);
         else
-            scheduledActionsMap.put(evt, new PendingClick(Executors.newSingleThreadScheduledExecutor().schedule(() -> propagateEvent(evt, EMultiplicity.CLICK), 200, TimeUnit.MILLISECONDS), toGamepadEventWith(evt)));
+            scheduledActionsMap.put(evt, new PendingClick(Executors.newSingleThreadScheduledExecutor().schedule(() -> propagateEvent(evt, EMultiplicity.CLICK), longStep, TimeUnit.MILLISECONDS), toGamepadEventWith(evt)));
     };
 
 

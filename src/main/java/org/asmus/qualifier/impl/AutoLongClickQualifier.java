@@ -22,9 +22,7 @@ public class AutoLongClickQualifier extends TimedQualifier {
 
     @Override
     public void qualify(ButtonClick evt) {
-        String name = Optional.ofNullable(evt.getPush())
-                .orElse(evt.getRelease())
-                .getName();
+        String name = evt.getPush().getName();
 
         // release event, but was emitted automatically before
         if (evt.getPush().isValue() && !scheduledActionsMap.containsKey(name))
@@ -33,7 +31,7 @@ public class AutoLongClickQualifier extends TimedQualifier {
         if (scheduledActionsMap.containsKey(name)) {
             scheduledActionsMap.get(name).cancel(true);
 
-            output.tryEmitNext(toGamepadEventWith(evt).withLongPress(false));
+            output.tryEmitNext(toGamepadEventWith(evt));
 
             scheduledActionsMap.remove(name);
             return;
@@ -46,23 +44,5 @@ public class AutoLongClickQualifier extends TimedQualifier {
         }, longStep, TimeUnit.MILLISECONDS);
 
         scheduledActionsMap.put(name, future);
-
-//        else {
-//            scheduledActionsMap.put(name, new PendingClick(Executors.newSingleThreadScheduledExecutor().schedule(() -> propagateEvent(evt, EMultiplicity.CLICK, true), longStep, TimeUnit.MILLISECONDS), toGamepadEventWith(evt)));
-//        }
-
-
     }
-
-//    void propagateEvent(ButtonClick evt, EMultiplicity multiplicity, boolean longClick) {
-//        Optional.ofNullable(evt)
-//                .map(ButtonClick::getRelease)
-//                .map(TimedValue::getName)
-//                .map(scheduledActionsMap::remove)
-//                .filter(f -> f.future().cancel(true))
-//                .map(PendingClick::gamepadEvent)
-//                .map(p -> p.withMultiplicity(multiplicity).withLongPress(longClick))
-//                .ifPresent(output::tryEmitNext);
-//    }
-
 }

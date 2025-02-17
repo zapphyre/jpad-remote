@@ -1,10 +1,7 @@
 package org.asmus;
 
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.facade.TimedButtonGamepadFactory;
-import org.asmus.model.GamepadEvent;
-import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
+import org.asmus.builder.OsConnector;
 
 
 @Slf4j
@@ -12,11 +9,11 @@ public class Main {
 
 
     public static void main(String[] args) throws InterruptedException {
-        TimedButtonGamepadFactory timedButtonGamepadFactory = new TimedButtonGamepadFactory();
+        OsConnector osConnector = new OsConnector();
 
-        timedButtonGamepadFactory.watchForDevices( 0, 1);
+        osConnector.watchForDevices( 0, 1);
 
-        timedButtonGamepadFactory.getButtonStream()
+        osConnector.getButtonStream()
                 .subscribe(System.out::println);
 
 //        timedButtonGamepadFactory.getArrowsStream()

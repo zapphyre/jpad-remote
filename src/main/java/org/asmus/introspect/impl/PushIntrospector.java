@@ -5,14 +5,16 @@ import org.asmus.model.ButtonClick;
 import org.asmus.model.TimedValue;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 @Value
 public class PushIntrospector extends BaseIntrospector {
 
     @Override
-    public ButtonClick translate(List<TimedValue> states) {
-        return states.stream()
+    public Function<List<TimedValue>, ButtonClick> translate(List<String> forButtonNames) {
+        return q -> q.stream()
+                .filter(relevantButtonAction(forButtonNames))
                 .map(pairWithPreviousValue)
                 .filter(buttonStateChanged)
                 .filter(buttonWasPressed)

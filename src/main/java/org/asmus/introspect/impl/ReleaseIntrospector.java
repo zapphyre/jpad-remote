@@ -1,43 +1,28 @@
-package org.asmus.tool;
+package org.asmus.introspect.impl;
 
 import lombok.SneakyThrows;
+import lombok.Value;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.TimedValue;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BinaryOperator;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class GamepadIntrospector {
+@Value
+public class ReleaseIntrospector extends BaseIntrospector {
 
-    Map<String, TimedValue> values = new HashMap<>();
-    Set<TimedValue> holding = new LinkedHashSet<>();
     Set<String> modifiers = new HashSet<>();
 
-    BinaryOperator<ButtonClick> lastElement = (p, q) -> q;
-
-    Predicate<ButtonClick> buttonStateChanged = q -> q.getPush().isValue() != q.getRelease().isValue();
     Predicate<ButtonClick> notModifier = q -> !modifiers.remove(q.getPush().getName());
-    Predicate<ButtonClick> buttonWasPressed = q -> holding.add(q.getPush());
-    Predicate<ButtonClick> buttonWasReleased = q -> holding.remove(q.getRelease()) && holding.remove(q.getPush());
     Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
 
-    Function<TimedValue, ButtonClick> pairWithPreviousValue = current -> {
-        TimedValue previous = values.computeIfAbsent(current.getName(), TimedValue::new);
-
-        if (!current.equals(previous))
-            values.put(current.getName(), current);
-
-        return ButtonClick.builder()
-                .push(previous)
-                .release(current)
-                .build();
-    };
-
     @SneakyThrows
-    public ButtonClick releaseEvent(List<TimedValue> values) {
+    public ButtonClick translate(List<TimedValue> values) {
         return values.stream()
                 .map(pairWithPreviousValue)
                 .filter(buttonStateChanged)

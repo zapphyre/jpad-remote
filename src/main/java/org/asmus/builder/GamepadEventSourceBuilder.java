@@ -3,14 +3,20 @@ package org.asmus.builder;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.closure.ArrowEvent;
 import org.asmus.builder.closure.OsDevice;
+import org.asmus.builder.closure.RawEventListener;
+import org.asmus.introspect.impl.BothIntrospector;
+import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.model.EButtonAxisMapping;
 import org.asmus.model.GamepadEvent;
 import org.asmus.model.NamingConstants;
+import org.asmus.qualifier.impl.*;
+import org.asmus.service.JoyWorker;
 import org.asmus.tool.AxisMapper;
 import reactor.core.publisher.Flux;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -21,17 +27,46 @@ public class GamepadEventSourceBuilder {
         return q -> q.get(axisName) != 0;
     }
 
-    public OsDevice getButtonStream() {
+    public static final ActuationBehaviour MODIFIER = ActuationBehaviour.builder()
+            .introspector(new ReleaseIntrospector())
+            .qualifier(new ModifierAndLongPressQualifier())
+            .build();
+
+    public static final ActuationBehaviour LONG = ActuationBehaviour.builder()
+            .introspector(new BothIntrospector())
+            .qualifier(new AutoLongClickQualifier())
+            .build();
+
+    public static final ActuationBehaviour PUSH = ActuationBehaviour.builder()
+            .introspector(new PushIntrospector())
+            .qualifier(new ImmediateQualifier())
+            .build();
+
+    public static final ActuationBehaviour MULTIPLICITY = ActuationBehaviour.builder()
+            .introspector(new BothIntrospector())
+            .qualifier(new MultiplicityQualifier())
+            .build();
+
+    static List<String> names(List<EButtonAxisMapping> buttons) {
+        return buttons.stream().map(EButtonAxisMapping::getInternal).toList();
+    }
+
+    public static RawEventListener rawEvents() {
+        return JoyWorker::getButtonStream;
+    }
+
+    public static OsDevice getButtonStream() {
         return worker -> behaviour -> buttons -> {
             worker.getButtonStream()
-                    .mapNotNull(behaviour.getIntrospector().translate(buttons.stream().map(EButtonAxisMapping::name).toList()))
-                    .subscribe(behaviour.getGetQualifier()::qualify);
+                    .mapNotNull(behaviour.getIntrospector().translate(names(buttons)))
+                    .subscribe(behaviour.getQualifier()::qualify);
 
-            return behaviour.getOut().asFlux().publish().autoConnect();
+            return behaviour.getQualifier().getQualifiedEventStream().asFlux()
+                    .publish().autoConnect();
         };
     }
 
-    public ArrowEvent getArrowsStream() {
+    public static ArrowEvent getArrowsStream() {
         return worker -> {
             ReleaseIntrospector introspector = new ReleaseIntrospector();
             ActuationBehaviour act = ActuationBehaviour.builder()

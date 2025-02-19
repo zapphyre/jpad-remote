@@ -1,6 +1,7 @@
 package org.asmus.builder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.introspect.Introspector;
 import org.asmus.introspect.impl.PushIntrospector;
@@ -37,6 +38,8 @@ public class OsConnector {
     static ObjectMapper mapper = new ObjectMapper();
 
     ReleaseIntrospector introspector = new ReleaseIntrospector();
+
+    @Getter
     JoyWorker worker = new JoyWorker();
 
     public List<Runnable> watchForDevices(Integer ...ids) {
@@ -84,17 +87,17 @@ public class OsConnector {
         return q -> q.get(axisName) != 0;
     }
 
-    public Flux<GamepadEvent> getButtonStream() {
-        Sinks.Many<GamepadEvent> out = Sinks.many().multicast().directBestEffort();
-        Introspector introspector = new PushIntrospector();
-        Qualifier qualifier = new ImmediateQualifier(out);
-
-        worker.getButtonStream()
-                .mapNotNull(introspector::translate)
-                .subscribe(qualifier::qualify);
-
-        return out.asFlux().publish().autoConnect();
-    }
+//    public Flux<GamepadEvent> getButtonStream() {
+//        Sinks.Many<GamepadEvent> out = Sinks.many().multicast().directBestEffort();
+//        Introspector introspector = new PushIntrospector();
+//        Qualifier qualifier = new ImmediateQualifier(out);
+//
+//        worker.getButtonStream()
+//                .mapNotNull(introspector::translate)
+//                .subscribe(qualifier::qualify);
+//
+//        return out.asFlux().publish().autoConnect();
+//    }
 
     public Flux<GamepadEvent> getArrowsStream() {
         Flux<GamepadEvent> vertical = worker.getAxisStream()
@@ -110,7 +113,7 @@ public class OsConnector {
                         .map(EButtonAxisMapping::getByName)
                         .collect(Collectors.toSet())
                 ))
-                .doOnCancel(getButtonStream()::subscribe)
+//                .doOnCancel(getButtonStream()::subscribe)
                 .publish().autoConnect();
     }
 
@@ -132,8 +135,8 @@ public class OsConnector {
                 .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByName)
                         .collect(Collectors.toSet())
-                ))
-                .doOnCancel(getButtonStream()::subscribe);
+                ));
+//                .doOnCancel(getButtonStream()::subscribe);
     }
 
     public Flux<PolarCoords> getLeftStickStream() {

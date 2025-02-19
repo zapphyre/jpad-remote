@@ -37,15 +37,24 @@ public enum EButtonAxisMapping {
     OTHER("other", false),
     ;
 
-    final String str;
+    final String internal;
     final boolean analog;
 
     public static EButtonAxisMapping getByName(final String name) {
         for (EButtonAxisMapping value : EButtonAxisMapping.values()) {
-            if (value.str.equals(name))
+            if (value.internal.equals(name))
                 return value;
         }
 
         return OTHER;
+    }
+
+    public static String getInternalByEnumName(String name) {
+        for (EButtonAxisMapping value : EButtonAxisMapping.values()) {
+            if (value.name().equals(name))
+                return value.internal;
+        }
+
+        return OTHER.internal;
     }
 }

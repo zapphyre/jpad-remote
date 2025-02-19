@@ -1,5 +1,6 @@
 package org.asmus.qualifier.impl;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.EButtonAxisMapping;
@@ -13,8 +14,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public abstract class BaseQualifier implements Qualifier {
 
-    long longStep = 420;
-    final Sinks.Many<GamepadEvent> output;
+    final long longStep = 610;
+
+    @Getter
+    final Sinks.Many<GamepadEvent> qualifiedEventStream = Sinks.many().multicast().directBestEffort();
 
     GamepadEvent toGamepadEventWith(ButtonClick q) {
         return GamepadEvent.builder()

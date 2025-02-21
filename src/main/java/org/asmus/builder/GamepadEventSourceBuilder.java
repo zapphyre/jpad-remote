@@ -59,20 +59,17 @@ public class GamepadEventSourceBuilder {
     }
 
     public FilteredBehaviour getButtonStream() {
-        return behaviour -> states -> {
-            states.stream()
-                    .map(GamepadStateMapper::map)
-                    .filter(Objects::nonNull)
-                    .map(q -> behaviour.apply(q).getBehaviour().getIntrospector().translate(q))
-                    .filter(Objects::nonNull)
-                    .forEach(q -> behaviour.apply(q).getBehaviour().getQualifier().useStream(qualifiedEventStream).qualify(q));
-        };
+        return behaviour -> states -> states.stream()
+                .map(GamepadStateMapper::map)
+                .filter(Objects::nonNull)
+                .map(q -> behaviour.apply(q).getIntrospector().translate(q))
+                .filter(Objects::nonNull)
+                .forEach(q -> behaviour.apply(q).getQualifier().useStream(qualifiedEventStream).qualify(q));
     }
 
     public RawArrowSource getArrowsStream(Flux<List<TimedValue>> buttonStream) {
         ReleaseIntrospector introspector = new ReleaseIntrospector();
-        buttonStream.subscribe(q ->
-                q.stream()
+        buttonStream.subscribe(q -> q.stream()
                         .map(GamepadStateMapper::map)
                         .filter(Objects::nonNull)
                         .forEach(introspector::translate));

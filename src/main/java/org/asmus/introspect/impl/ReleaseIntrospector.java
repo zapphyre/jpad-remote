@@ -7,6 +7,7 @@ import org.asmus.model.TimedValue;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -21,14 +22,10 @@ public class ReleaseIntrospector extends BaseIntrospector {
     Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
 
     @SneakyThrows
-    public Function<List<TimedValue>, ButtonClick> translate(List<String> forButtonNames) {
-        return q -> q.stream()
-                .filter(relevantButtonAction(forButtonNames))
-                .map(pairWithPreviousValue)
-                .filter(buttonStateChanged)
+    public ButtonClick translate(ButtonClick buttonClick) {
+        return Optional.of(buttonClick)
                 .filter(buttonWasPressedAndReleased)
                 .filter(notModifier)
-                .reduce(lastElement)
                 .map(c -> c.withModifiers(getModifiersResetEvents()))
                 .orElse(null);
     }

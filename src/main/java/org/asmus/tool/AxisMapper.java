@@ -9,14 +9,16 @@ import java.util.function.Function;
 @UtilityClass
 public class AxisMapper {
 
-    public static Function<Map<String, Integer>, GamepadEvent> mapVertical = q -> q.get(NamingConstants.ARROW_Y) > 0 ?
+    public static Function<Map.Entry<String, Integer>, GamepadEvent> mapVertical =
+            q -> q.getKey().equals(NamingConstants.ARROW_Y) && q.getValue() > 0 ?
             GamepadEvent.builder()
                     .type(EButtonAxisMapping.DOWN)
                     .build() : GamepadEvent.builder()
             .type(EButtonAxisMapping.UP)
             .build();
 
-    public static Function<Map<String, Integer>, GamepadEvent> mapHorizontal = q -> q.get(NamingConstants.ARROW_X) > 0 ?
+    public static Function<Map.Entry<String, Integer>, GamepadEvent> mapHorizontal =
+            q -> q.getKey().equals(NamingConstants.ARROW_X) && q.getValue() > 0 ?
             GamepadEvent.builder()
                     .type(EButtonAxisMapping.RIGHT)
                     .build() : GamepadEvent.builder()

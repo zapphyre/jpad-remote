@@ -1,6 +1,8 @@
 package org.asmus.qualifier.impl;
 
 import org.asmus.model.ButtonClick;
+import org.asmus.model.GamepadEvent;
+import reactor.core.publisher.Sinks;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +11,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class AutoLongClickQualifier extends MultiplicityQualifier {
+public class AutoLongClickQualifier extends BaseQualifier {
 
     Map<String, Future> scheduledActionsMap = new HashMap<>();
 

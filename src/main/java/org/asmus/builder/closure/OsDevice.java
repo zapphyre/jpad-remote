@@ -1,9 +1,11 @@
 package org.asmus.builder.closure;
 
-import org.asmus.service.JoyWorker;
+import org.asmus.model.TimedValue;
+
+import java.util.List;
 
 @FunctionalInterface
 public interface OsDevice {
 
-    Actuation device(JoyWorker worker);
+    void processButtonEvents(List<TimedValue> states);
 }

@@ -6,18 +6,24 @@ import org.asmus.model.ButtonClick;
 import org.asmus.model.EButtonAxisMapping;
 import org.asmus.model.GamepadEvent;
 import org.asmus.qualifier.Qualifier;
+import org.asmus.qualifier.QualifyBuilder;
 import reactor.core.publisher.Sinks;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public abstract class BaseQualifier implements Qualifier {
+public abstract class BaseQualifier implements QualifyBuilder, Qualifier {
 
     final long longStep = 610;
 
-    @Getter
-    final Sinks.Many<GamepadEvent> qualifiedEventStream = Sinks.many().multicast().directBestEffort();
+    Sinks.Many<GamepadEvent> qualifiedEventStream;
+
+    @Override
+    public Qualifier useStream(Sinks.Many<GamepadEvent> stream) {
+        qualifiedEventStream = stream;
+        return this::qualify;
+    }
 
     GamepadEvent toGamepadEventWith(ButtonClick q) {
         return GamepadEvent.builder()

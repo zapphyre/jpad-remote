@@ -6,6 +6,7 @@ public class ImmediateQualifier extends BaseQualifier {
 
     @Override
     public void qualify(ButtonClick click) {
+
         qualifiedEventStream.tryEmitNext(toGamepadEventWith(click).withLongPress(false));
     }
 }

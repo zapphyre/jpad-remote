@@ -1,30 +1,37 @@
 package org.asmus.builder;
 
+import lombok.Getter;
 import org.asmus.behaviour.ActuationBehaviour;
-import org.asmus.builder.closure.ArrowEvent;
-import org.asmus.builder.closure.OsDevice;
-import org.asmus.builder.closure.RawEventListener;
+import org.asmus.builder.closure.FilteredBehaviour;
+import org.asmus.builder.closure.RawArrowSource;
 import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
+import org.asmus.mapper.GamepadStateMapper;
 import org.asmus.model.EButtonAxisMapping;
 import org.asmus.model.GamepadEvent;
 import org.asmus.model.NamingConstants;
-import org.asmus.qualifier.impl.*;
-import org.asmus.service.JoyWorker;
+import org.asmus.model.TimedValue;
+import org.asmus.qualifier.impl.AutoLongClickQualifier;
+import org.asmus.qualifier.impl.ImmediateQualifier;
+import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
+import org.asmus.qualifier.impl.MultiplicityQualifier;
 import org.asmus.tool.AxisMapper;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class GamepadEventSourceBuilder {
+    @Getter
+    private final Sinks.Many<GamepadEvent> qualifiedEventStream = Sinks.many().multicast().directBestEffort();
 
-    static Predicate<Map<String, Integer>> notZeroFor(String axisName) {
-        return q -> q.get(axisName) != 0;
+    static Predicate<Map.Entry<String, Integer>> notZeroFor(String axisName) {
+        return q -> q.getKey().equals(axisName) && q.getValue() != 0;
     }
 
     public static final ActuationBehaviour MODIFIER = ActuationBehaviour.builder()
@@ -51,48 +58,42 @@ public class GamepadEventSourceBuilder {
         return buttons.stream().map(EButtonAxisMapping::getInternal).toList();
     }
 
-    public static RawEventListener rawEvents() {
-        return JoyWorker::getButtonStream;
-    }
-
-    public static OsDevice getButtonStream() {
-        return worker -> behaviour -> buttons -> {
-            worker.getButtonStream()
-                    .mapNotNull(behaviour.getIntrospector().translate(names(buttons)))
-                    .subscribe(behaviour.getQualifier()::qualify);
-
-            return behaviour.getQualifier().getQualifiedEventStream().asFlux()
-                    .publish().autoConnect();
+    public FilteredBehaviour getButtonStream() {
+        return behaviour -> states -> {
+            states.stream()
+                    .map(GamepadStateMapper::map)
+                    .filter(Objects::nonNull)
+                    .map(q -> behaviour.apply(q).getBehaviour().getIntrospector().translate(q))
+                    .filter(Objects::nonNull)
+                    .forEach(q -> behaviour.apply(q).getBehaviour().getQualifier().useStream(qualifiedEventStream).qualify(q));
         };
     }
 
-    public static ArrowEvent getArrowsStream() {
-        return worker -> {
-            ReleaseIntrospector introspector = new ReleaseIntrospector();
-            ActuationBehaviour act = ActuationBehaviour.builder()
-                    .introspector(introspector)
-                    .build();
+    public RawArrowSource getArrowsStream(Flux<List<TimedValue>> buttonStream) {
+        ReleaseIntrospector introspector = new ReleaseIntrospector();
+        buttonStream.subscribe(q ->
+                q.stream()
+                        .map(GamepadStateMapper::map)
+                        .filter(Objects::nonNull)
+                        .forEach(introspector::translate));
 
-            Flux<GamepadEvent> buttons = getButtonStream()
-                    .device(worker)
-                    .actuation(act)
-                    .buttons(Arrays.asList(EButtonAxisMapping.values()));
-
-            Flux<GamepadEvent> vertical = worker.getAxisStream()
+        return axisStates -> {
+            List<GamepadEvent> vertical = axisStates.entrySet().stream()
                     .filter(notZeroFor(NamingConstants.ARROW_Y))
-                    .map(AxisMapper.mapVertical);
+                    .map(AxisMapper.mapVertical)
+                    .toList();
 
-            Flux<GamepadEvent> horizontal = worker.getAxisStream()
+            List<GamepadEvent> horizontal = axisStates.entrySet().stream()
                     .filter(notZeroFor(NamingConstants.ARROW_X))
-                    .map(AxisMapper.mapHorizontal);
+                    .map(AxisMapper.mapHorizontal)
+                    .toList();
 
-            return Flux.merge(vertical, horizontal)
+            Flux.merge(Flux.fromIterable(vertical), Flux.fromIterable(horizontal))
                     .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
                             .map(EButtonAxisMapping::getByName)
                             .collect(Collectors.toSet())
                     ))
-                    .doOnCancel(buttons::subscribe)
-                    .publish().autoConnect();
+                    .subscribe(qualifiedEventStream::tryEmitNext);
         };
     }
 }

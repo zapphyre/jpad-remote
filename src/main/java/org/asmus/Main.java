@@ -2,35 +2,51 @@ package org.asmus;
 
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.behaviour.ActuationBehaviour;
-import org.asmus.builder.OsConnector;
+import org.asmus.builder.GamepadEventSourceBuilder;
+import org.asmus.builder.EventProducer;
+import org.asmus.builder.closure.OsDevice;
+import org.asmus.builder.closure.RawArrowSource;
 import org.asmus.introspect.impl.ReleaseIntrospector;
+import org.asmus.model.BehavioralFilter;
 import org.asmus.model.EButtonAxisMapping;
 import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
-import org.asmus.qualifier.impl.MultiplicityQualifier;
 
 import java.util.Arrays;
 
-import static org.asmus.builder.GamepadEventSourceBuilder.getButtonStream;
+import static org.asmus.builder.GamepadEventSourceBuilder.LONG;
 
 
 @Slf4j
 public class Main {
 
-
     public static void main(String[] args) throws InterruptedException {
-        OsConnector osConnector = new OsConnector();
+        EventProducer eventProducer = new EventProducer();
 
-        osConnector.watchForDevices( 0, 1);
+        eventProducer.watchForDevices(0, 1);
+        ActuationBehaviour behaviour = ActuationBehaviour.builder()
+                .introspector(new ReleaseIntrospector())
+                .qualifier(new ModifierAndLongPressQualifier())
+                .build();
 
-        getButtonStream().device(osConnector.getWorker())
-//                .actuation(RELEASE)
-                .actuation(ActuationBehaviour.builder()
-                        .introspector(new ReleaseIntrospector())
-                        .qualifier(new ModifierAndLongPressQualifier())
-//                        .qualifier(new MultiplicityQualifier())
-                        .build())
-                .buttons(Arrays.stream(EButtonAxisMapping.values()).toList())
-                .subscribe(q -> log.info("{}", q));
+        GamepadEventSourceBuilder gamepadEventSourceBuilder = new GamepadEventSourceBuilder();
+
+        OsDevice wrapper = gamepadEventSourceBuilder.getButtonStream()
+                .act(q -> BehavioralFilter.builder()
+                        .behaviour(LONG)
+                        .buttons(Arrays.stream(EButtonAxisMapping.values()).toList())
+                        .build());
+
+        eventProducer.getWorker().getButtonStream()
+                .map(q -> q)
+                .subscribe(wrapper::processButtonEvents);
+//
+        gamepadEventSourceBuilder.getQualifiedEventStream().asFlux()
+                .log()
+                .subscribe();
+
+        RawArrowSource arrowsStream = gamepadEventSourceBuilder.getArrowsStream(eventProducer.getWorker().getButtonStream());
+        eventProducer.getWorker().getAxisStream()
+                .subscribe(arrowsStream::processArrowEvents);
 
 //        osConnector.getButtonStream()
 //                .subscribe(System.out::println);

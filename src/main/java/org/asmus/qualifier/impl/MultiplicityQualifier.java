@@ -1,6 +1,7 @@
 package org.asmus.qualifier.impl;
 
 import org.asmus.model.*;
+import reactor.core.publisher.Sinks;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +33,7 @@ public class MultiplicityQualifier extends BaseQualifier {
         if (!event.isRelease() && !isActive(event)) {
             timingFutureMap.put(event, new TimeFuture(
                             System.currentTimeMillis(), 1, false, event,
-                            null
-                    )
+                            null)
             );
 
             return;

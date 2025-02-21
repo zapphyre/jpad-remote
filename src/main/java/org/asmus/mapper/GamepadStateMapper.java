@@ -29,10 +29,9 @@ public class GamepadStateMapper {
     }
 
     public ButtonClick map(TimedValue current) {
-        ButtonClick buttonClick = Optional.of(current)
+        return Optional.of(current)
                 .map(GamepadStateMapper::translate)
                 .filter(buttonStateChanged)
                 .orElse(null);
-        return buttonClick;
     }
 }

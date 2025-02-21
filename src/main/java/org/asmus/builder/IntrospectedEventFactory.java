@@ -1,9 +1,9 @@
 package org.asmus.builder;
 
-import lombok.Getter;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.closure.FilteredBehaviour;
 import org.asmus.builder.closure.RawArrowSource;
+import org.asmus.introspect.Introspector;
 import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
@@ -26,9 +26,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class GamepadEventSourceBuilder {
-    @Getter
+public class IntrospectedEventFactory {
     private final Sinks.Many<GamepadEvent> qualifiedEventStream = Sinks.many().multicast().directBestEffort();
+    private Introspector momentaryIntrospector;
 
     static Predicate<Map.Entry<String, Integer>> notZeroFor(String axisName) {
         return q -> q.getKey().equals(axisName) && q.getValue() != 0;
@@ -54,25 +54,18 @@ public class GamepadEventSourceBuilder {
             .qualifier(new MultiplicityQualifier())
             .build();
 
-    static List<String> names(List<EButtonAxisMapping> buttons) {
-        return buttons.stream().map(EButtonAxisMapping::getInternal).toList();
-    }
-
     public FilteredBehaviour getButtonStream() {
+        GamepadStateMapper gamepadStateMapper = new GamepadStateMapper();
         return behaviour -> states -> states.stream()
-                .map(GamepadStateMapper::map)
+                .map(gamepadStateMapper::map)
                 .filter(Objects::nonNull)
-                .map(q -> behaviour.apply(q).getIntrospector().translate(q))
+                .map(q -> (momentaryIntrospector = behaviour.apply(q).getIntrospector()).translate(q))
                 .filter(Objects::nonNull)
                 .forEach(q -> behaviour.apply(q).getQualifier().useStream(qualifiedEventStream).qualify(q));
     }
 
-    public RawArrowSource getArrowsStream(Flux<List<TimedValue>> buttonStream) {
-        ReleaseIntrospector introspector = new ReleaseIntrospector();
-        buttonStream.subscribe(q -> q.stream()
-                        .map(GamepadStateMapper::map)
-                        .filter(Objects::nonNull)
-                        .forEach(introspector::translate));
+    public RawArrowSource getArrowsStream() {
+        GamepadStateMapper gamepadStateMapper = new GamepadStateMapper();
 
         return axisStates -> {
             List<GamepadEvent> vertical = axisStates.entrySet().stream()
@@ -86,11 +79,16 @@ public class GamepadEventSourceBuilder {
                     .toList();
 
             Flux.merge(Flux.fromIterable(vertical), Flux.fromIterable(horizontal))
-                    .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
+                    .map(q -> q.withModifiers(
+                            momentaryIntrospector.getModifiersResetEvents().stream()
                             .map(EButtonAxisMapping::getByName)
                             .collect(Collectors.toSet())
                     ))
                     .subscribe(qualifiedEventStream::tryEmitNext);
         };
+    }
+
+    public Flux<GamepadEvent> getEventStream() {
+        return qualifiedEventStream.asFlux();
     }
 }

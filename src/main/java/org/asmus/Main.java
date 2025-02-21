@@ -3,13 +3,14 @@ package org.asmus;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.EventProducer;
-import org.asmus.builder.GamepadEventSourceBuilder;
+import org.asmus.builder.IntrospectedEventFactory;
 import org.asmus.builder.closure.OsDevice;
 import org.asmus.builder.closure.RawArrowSource;
 import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
 
-import static org.asmus.builder.GamepadEventSourceBuilder.LONG;
+import static org.asmus.builder.IntrospectedEventFactory.LONG;
+import static org.asmus.builder.IntrospectedEventFactory.MODIFIER;
 
 
 @Slf4j
@@ -24,20 +25,20 @@ public class Main {
                 .qualifier(new ModifierAndLongPressQualifier())
                 .build();
 
-        GamepadEventSourceBuilder gamepadEventSourceBuilder = new GamepadEventSourceBuilder();
+        IntrospectedEventFactory gamepadEventSourceBuilder = new IntrospectedEventFactory();
 
         OsDevice wrapper = gamepadEventSourceBuilder.getButtonStream()
-                .act(q -> LONG);
+                .act(q -> MODIFIER);
 
         eventProducer.getWorker().getButtonStream()
                 .map(q -> q)
                 .subscribe(wrapper::processButtonEvents);
 //
-        gamepadEventSourceBuilder.getQualifiedEventStream().asFlux()
+        gamepadEventSourceBuilder.getEventStream()
                 .log()
                 .subscribe();
 
-        RawArrowSource arrowsStream = gamepadEventSourceBuilder.getArrowsStream(eventProducer.getWorker().getButtonStream());
+        RawArrowSource arrowsStream = gamepadEventSourceBuilder.getArrowsStream();
         eventProducer.getWorker().getAxisStream()
                 .subscribe(arrowsStream::processArrowEvents);
 

@@ -78,44 +78,6 @@ public class EventProducer {
 
     static Predicate<Controller> pathExists = q -> Files.exists(Path.of(q.device()));
 
-    static Predicate<Map<String, Integer>> notZeroFor(String axisName) {
-        return q -> q.get(axisName) != 0;
-    }
-
-    Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
-
-    public Flux<TriggerPosition> getTriggerStream() {
-        Flux<TriggerPosition> left = worker.getAxisStream()
-                .map(AxisMapper.getTriggerPosition(NamingConstants.LEFT_TRIGGER))
-                .map(q -> q.withType(EButtonAxisMapping.TRIGGER_LEFT));
-
-        Flux<TriggerPosition> right = worker.getAxisStream()
-                .map(AxisMapper.getTriggerPosition(NamingConstants.RIGHT_TRIGGER))
-                .map(q -> q.withType(EButtonAxisMapping.TRIGGER_RIGHT));
-
-        Flux<TriggerPosition> triggers = Flux.merge(left, right).publish().autoConnect();
-
-        return triggers
-                .filter(triggerEngaged)
-                .map(q -> q.withModifiers(introspector.getModifiersResetEvents().stream()
-                        .map(EButtonAxisMapping::getByName)
-                        .collect(Collectors.toSet())
-                ));
-//                .doOnCancel(getButtonStream()::subscribe);
-    }
-
-    public Flux<PolarCoords> getLeftStickStream() {
-        return worker.getAxisStream()
-                .filter(notZeroFor(NamingConstants.LEFT_STICK_X).or(notZeroFor(NamingConstants.LEFT_STICK_Y)))
-                .map(EventMapper.translateAxis(NamingConstants.LEFT_STICK_X, NamingConstants.LEFT_STICK_Y));
-    }
-
-    public Flux<PolarCoords> getRightStickStream() {
-        return worker.getAxisStream()
-                .filter(notZeroFor(NamingConstants.RIGHT_STICK_X).or(notZeroFor(NamingConstants.RIGHT_STICK_Y)))
-                .map(EventMapper.translateAxis(NamingConstants.RIGHT_STICK_X, NamingConstants.RIGHT_STICK_Y));
-    }
-
     public static Controller getControllerMappings(String path) {
         try {
 

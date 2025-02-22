@@ -4,12 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.EventProducer;
 import org.asmus.builder.IntrospectedEventFactory;
-import org.asmus.builder.closure.OsDevice;
-import org.asmus.builder.closure.RawArrowSource;
+import org.asmus.builder.closure.button.OsDevice;
+import org.asmus.builder.closure.button.RawArrowSource;
 import org.asmus.introspect.impl.ReleaseIntrospector;
-import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
+import org.asmus.qualifier.impl.MultiplicityQualifier;
 
-import static org.asmus.builder.IntrospectedEventFactory.LONG;
 import static org.asmus.builder.IntrospectedEventFactory.MODIFIER;
 
 
@@ -22,7 +21,7 @@ public class Main {
         eventProducer.watchForDevices(0, 1);
         ActuationBehaviour behaviour = ActuationBehaviour.builder()
                 .introspector(new ReleaseIntrospector())
-                .qualifier(new ModifierAndLongPressQualifier())
+                .qualifier(new MultiplicityQualifier())
                 .build();
 
         IntrospectedEventFactory gamepadEventSourceBuilder = new IntrospectedEventFactory();

@@ -1,8 +1,6 @@
 package org.asmus.qualifier.impl;
 
 import org.asmus.model.ButtonClick;
-import org.asmus.model.GamepadEvent;
-import reactor.core.publisher.Sinks;
 
 import java.util.HashMap;
 import java.util.Map;

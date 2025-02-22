@@ -1,4 +1,4 @@
-package org.asmus.builder.closure;
+package org.asmus.builder.closure.button;
 
 import java.util.Map;
 

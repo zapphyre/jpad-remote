@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public abstract class BaseQualifier implements QualifyBuilder, Qualifier {
 
-    final long longStep = 610;
+    final long longStep = 420;
 
     Sinks.Many<GamepadEvent> qualifiedEventStream;
 

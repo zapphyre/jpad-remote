@@ -1,4 +1,4 @@
-package org.asmus.builder.closure;
+package org.asmus.builder.closure.button;
 
 import org.asmus.model.TimedValue;
 import org.asmus.service.JoyWorker;

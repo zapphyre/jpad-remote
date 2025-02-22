@@ -1,5 +1,6 @@
 package org.asmus.builder;
 
+import lombok.experimental.UtilityClass;
 import org.asmus.builder.closure.axis.PolarCoordsProducer;
 import org.asmus.builder.closure.axis.TriggerPosProducer;
 import org.asmus.model.EButtonAxisMapping;
@@ -11,6 +12,7 @@ import org.asmus.tool.EventMapper;
 import java.util.Map;
 import java.util.function.Predicate;
 
+@UtilityClass
 public class AxisEventFactory {
 
     public PolarCoordsProducer leftStickStream() {
@@ -21,8 +23,8 @@ public class AxisEventFactory {
 
     public PolarCoordsProducer rightStickStream() {
         return q -> q.getAxisStream()
-                .filter(notZeroFor(NamingConstants.LEFT_STICK_X).or(notZeroFor(NamingConstants.LEFT_STICK_Y)))
-                .map(EventMapper.translateAxis(NamingConstants.LEFT_STICK_X, NamingConstants.LEFT_STICK_Y));
+                .filter(notZeroFor(NamingConstants.RIGHT_STICK_X).or(notZeroFor(NamingConstants.RIGHT_STICK_Y)))
+                .map(EventMapper.translateAxis(NamingConstants.RIGHT_STICK_X, NamingConstants.RIGHT_STICK_Y));
     }
 
     public TriggerPosProducer rightTriggerStream() {

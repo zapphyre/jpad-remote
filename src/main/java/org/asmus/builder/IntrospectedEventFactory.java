@@ -3,7 +3,6 @@ package org.asmus.builder;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.closure.button.FilteredBehaviour;
 import org.asmus.builder.closure.button.RawArrowSource;
-import org.asmus.introspect.Introspector;
 import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class IntrospectedEventFactory {
     private final Sinks.Many<GamepadEvent> qualifiedEventStream = Sinks.many().multicast().directBestEffort();
-    private Introspector momentaryIntrospector = new BothIntrospector();
+    private ActuationBehaviour momentaryBehaviour = MODIFIER;
 
     static Predicate<Map.Entry<String, Integer>> notZeroFor(String axisName) {
         return q -> q.getKey().equals(axisName) && q.getValue() != 0;
@@ -58,14 +57,12 @@ public class IntrospectedEventFactory {
         return behaviour -> states -> states.stream()
                 .map(gamepadStateMapper::map)
                 .filter(Objects::nonNull)
-                .map(q -> (momentaryIntrospector = behaviour.apply(q).getIntrospector()).translate(q))
+                .map(q -> (momentaryBehaviour = behaviour.apply(q)).getIntrospector().translate(q))
                 .filter(Objects::nonNull)
-                .forEach(q -> behaviour.apply(q).getQualifier().useStream(qualifiedEventStream).qualify(q));
+                .forEach(q -> momentaryBehaviour.getQualifier().useStream(qualifiedEventStream).qualify(q));
     }
 
     public RawArrowSource getArrowsStream() {
-        GamepadStateMapper gamepadStateMapper = new GamepadStateMapper();
-
         return axisStates -> {
             List<GamepadEvent> vertical = axisStates.entrySet().stream()
                     .filter(notZeroFor(NamingConstants.ARROW_Y))
@@ -79,7 +76,7 @@ public class IntrospectedEventFactory {
 
             Flux.merge(Flux.fromIterable(vertical), Flux.fromIterable(horizontal))
                     .map(q -> q.withModifiers(
-                            momentaryIntrospector.getModifiersResetEvents().stream()
+                            momentaryBehaviour.getIntrospector().getModifiersResetEvents().stream()
                             .map(EButtonAxisMapping::getByName)
                             .collect(Collectors.toSet())
                     ))

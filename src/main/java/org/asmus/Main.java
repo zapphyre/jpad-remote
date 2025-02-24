@@ -9,7 +9,7 @@ import org.asmus.builder.closure.button.RawArrowSource;
 import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.qualifier.impl.MultiplicityQualifier;
 
-import static org.asmus.builder.IntrospectedEventFactory.MODIFIER;
+import static org.asmus.builder.IntrospectedEventFactory.*;
 
 
 @Slf4j
@@ -27,10 +27,9 @@ public class Main {
         IntrospectedEventFactory gamepadEventSourceBuilder = new IntrospectedEventFactory();
 
         OsDevice wrapper = gamepadEventSourceBuilder.getButtonStream()
-                .act(q -> MODIFIER);
+                .act(q -> PUSH);
 
         eventProducer.getWorker().getButtonStream()
-                .map(q -> q)
                 .subscribe(wrapper::processButtonEvents);
 //
         gamepadEventSourceBuilder.getEventStream()

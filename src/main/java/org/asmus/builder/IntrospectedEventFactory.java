@@ -59,7 +59,7 @@ public class IntrospectedEventFactory {
                 .filter(Objects::nonNull)
                 .map(q -> (momentaryBehaviour = behaviour.apply(q)).getIntrospector().translate(q))
                 .filter(Objects::nonNull)
-                .forEach(q -> momentaryBehaviour.getQualifier().useStream(qualifiedEventStream).qualify(q));
+                .forEach(momentaryBehaviour.getQualifier().useStream(qualifiedEventStream)::qualify);
     }
 
     public RawArrowSource getArrowsStream() {

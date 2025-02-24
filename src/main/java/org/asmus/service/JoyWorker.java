@@ -1,5 +1,6 @@
 package org.asmus.service;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.*;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -24,6 +26,8 @@ public class JoyWorker {
     private final Sinks.Many<List<TimedValue>> buttonStream = Sinks.many().multicast().directBestEffort();
     private final Sinks.Many<Map<String, Integer>> axisStream = Sinks.many().multicast().directBestEffort();
     private ScheduledFuture<?> pollerCloseable;
+
+    private final AtomicBoolean connected = new AtomicBoolean(false);
 
     public JoyWorker() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -53,8 +57,10 @@ public class JoyWorker {
         Path path = Path.of(controller.device());
 
         processEvents(device);
+        connected.set(true);
 
         return () -> {
+            connected.set(false);
             j.close();
             pollerCloseable.cancel(true);
         };
@@ -99,6 +105,9 @@ public class JoyWorker {
         }, 0, TimeUnit.MILLISECONDS);
     }
 
+    public boolean isConnected() {
+        return connected.get();
+    }
 
     <T> Function<LinuxJoystick, Function<ButtonNamePosition, InputValue<T>>> genericMapper(BiFunction<LinuxJoystick, Integer, T> getter) {
         return q -> p -> new InputValue<>(getter.apply(q, p.position()), p.buttonName());

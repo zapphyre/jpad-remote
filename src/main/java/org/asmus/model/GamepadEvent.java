@@ -20,4 +20,6 @@ public class GamepadEvent {
     EMultiplicity multiplicity = EMultiplicity.CLICK;
     boolean longPress;
     Set<EButtonAxisMapping> modifiers;
+
+    EQualificationType qualified;
 }

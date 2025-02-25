@@ -1,6 +1,7 @@
 package org.asmus.qualifier.impl;
 
 import org.asmus.model.ButtonClick;
+import org.asmus.model.EQualificationType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,14 +25,14 @@ public class AutoLongClickQualifier extends BaseQualifier {
         if (scheduledActionsMap.containsKey(name)) {
             scheduledActionsMap.get(name).cancel(true);
 
-            qualifiedEventStream.tryEmitNext(toGamepadEventWith(evt));
+            qualifiedEventStream.tryEmitNext(toGamepadEventWith(evt).withQualified(EQualificationType.LONG));
 
             scheduledActionsMap.remove(name);
             return;
         }
 
         ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor().schedule(() -> {
-            qualifiedEventStream.tryEmitNext(toGamepadEventWith(evt).withLongPress(true));
+            qualifiedEventStream.tryEmitNext(toGamepadEventWith(evt).withQualified(EQualificationType.LONG).withLongPress(true));
 
             scheduledActionsMap.remove(name);
         }, longStep, TimeUnit.MILLISECONDS);

@@ -1,12 +1,11 @@
 package org.asmus.builder.closure.button;
 
-import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.model.ButtonClick;
 
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface FilteredBehaviour {
 
-    OsDevice act(Function<ButtonClick, ActuationBehaviour> filter);
+    OsDevice act(Consumer<ButtonClick> qualifyWanted);
 }

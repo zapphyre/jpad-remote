@@ -78,6 +78,7 @@ public class MultiplicityQualifier extends BaseQualifier {
                 .eventName(tf.evt.getName())
                 .type(EButtonAxisMapping.getByName(tf.evt.getName()))
                 .longPress(tf.longClick)
+                .qualified(EQualificationType.MULTIPLE)
                 .build();
     }
 

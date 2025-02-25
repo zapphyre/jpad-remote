@@ -26,8 +26,7 @@ public class Main {
 
         IntrospectedEventFactory gamepadEventSourceBuilder = new IntrospectedEventFactory();
 
-        OsDevice wrapper = gamepadEventSourceBuilder.getButtonStream()
-                .act(q -> PUSH);
+        OsDevice wrapper = gamepadEventSourceBuilder.getButtonStream();
 
         eventProducer.getWorker().getButtonStream()
                 .subscribe(wrapper::processButtonEvents);

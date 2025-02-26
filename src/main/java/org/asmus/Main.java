@@ -9,8 +9,6 @@ import org.asmus.builder.closure.button.RawArrowSource;
 import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.qualifier.impl.MultiplicityQualifier;
 
-import static org.asmus.builder.IntrospectedEventFactory.*;
-
 
 @Slf4j
 public class Main {
@@ -31,7 +29,7 @@ public class Main {
         eventProducer.getWorker().getButtonStream()
                 .subscribe(wrapper::processButtonEvents);
 //
-        gamepadEventSourceBuilder.getEventStream()
+        gamepadEventSourceBuilder.getButtonEventStream()
                 .log()
                 .subscribe();
 

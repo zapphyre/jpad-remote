@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AutoLongClickQualifier extends BaseQualifier {
 
-    Map<String, Future> scheduledActionsMap = new HashMap<>();
+    private final Map<String, Future<?>> scheduledActionsMap = new HashMap<>();
 
     @Override
     public void qualify(ButtonClick evt) {

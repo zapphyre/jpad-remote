@@ -5,4 +5,6 @@ public enum EQualificationType {
     LONG,
     RELEASE,
     MULTIPLE,
+
+    ARROW;
 }

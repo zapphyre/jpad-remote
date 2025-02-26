@@ -13,7 +13,6 @@ import java.util.Set;
 @Builder
 public class GamepadEvent {
 
-    @EqualsAndHashCode.Include
     EButtonAxisMapping type;
     String eventName;
     @Builder.Default
@@ -21,5 +20,6 @@ public class GamepadEvent {
     boolean longPress;
     Set<EButtonAxisMapping> modifiers;
 
-    EQualificationType qualified;
+    @Builder.Default
+    EQualificationType qualified = EQualificationType.MULTIPLE;
 }

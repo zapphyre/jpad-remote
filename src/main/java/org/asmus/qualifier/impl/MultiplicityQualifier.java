@@ -65,7 +65,7 @@ public class MultiplicityQualifier extends BaseQualifier {
     }
 
     boolean isChainingPossible(ButtonEvent evt) {
-        return System.currentTimeMillis() - timingFutureMap.get(evt).time < 3000;
+        return System.currentTimeMillis() - timingFutureMap.get(evt).time < 2100;
     }
 
     boolean isActive(ButtonEvent evt) {

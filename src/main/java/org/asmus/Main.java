@@ -48,6 +48,20 @@ public class Main {
 //
 //        timedButtonGamepadFactory.getArrowsStream()
 //                .subscribe(System.out::println);
+
+//        SDLJoystick sdl = new SDLJoystick(0);
+//        int index = 0;
+//        String guid = sdl.getJoystickGUID();
+//        int axes = sdl.getJoystickNumAxes();
+//        int buttons = sdl.getJoystickNumButtons();
+//        String joystickName = sdl.getJoystickName();
+//        int joystickNumHats = sdl.getJoystickNumHats();
+//
+//        if (guid != null) {
+//            System.out.printf("GUID: %s, Name: %s, Axes: %d, Buttons: %d%n, Hats: %d%n", guid,joystickName, axes, buttons, joystickNumHats);
+//        } else {
+//            System.out.println("No joystick at index " + index);
+//        }
     }
 
 

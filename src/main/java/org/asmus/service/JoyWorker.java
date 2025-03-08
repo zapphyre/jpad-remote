@@ -1,6 +1,5 @@
 package org.asmus.service;
 
-import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.asmus.model.*;
@@ -11,7 +10,9 @@ import reactor.core.publisher.Sinks;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -54,7 +55,6 @@ public class JoyWorker {
                 .toList();
 
         ControllerDevice device = new ControllerDevice(axisMappings, buttonMappings, j);
-        Path path = Path.of(controller.device());
 
         processEvents(device);
         connected.set(true);
@@ -107,18 +107,6 @@ public class JoyWorker {
 
     public boolean isConnected() {
         return connected.get();
-    }
-
-    <T> Function<LinuxJoystick, Function<ButtonNamePosition, InputValue<T>>> genericMapper(BiFunction<LinuxJoystick, Integer, T> getter) {
-        return q -> p -> new InputValue<>(getter.apply(q, p.position()), p.buttonName());
-    }
-
-    <T> Function<BiFunction<LinuxJoystick, Integer, T>, Function<ButtonNamePosition, InputValue<T>>> mapState(LinuxJoystick j) {
-        return q -> p -> new InputValue<>(q.apply(j, p.position()), p.buttonName());
-    }
-
-    <T> Function<LinuxJoystick, Function<BiFunction<LinuxJoystick, Integer, T>, Function<ButtonNamePosition, InputValue<T>>>> mapState() {
-        return j -> q -> p -> new InputValue<>(q.apply(j, p.position()), p.buttonName());
     }
 
     public Flux<List<TimedValue>> getButtonStream() {

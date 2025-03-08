@@ -11,13 +11,12 @@
 
 using json = nlohmann::json;
 
-// Function to get the number of axes, buttons, and mapping for a joystick device
 json getJoystickInfo(const std::string& device_path) {
     json result;
     int fd = open(device_path.c_str(), O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
-        std::cerr << "Failed to open " << device_path << std::endl;
-        return result; // Return empty object on error
+        std::cerr << "[ERROR] Failed to open " << device_path << std::endl;
+        return result;
     }
 
     char name[128];
@@ -25,69 +24,74 @@ json getJoystickInfo(const std::string& device_path) {
         strncpy(name, "Unknown", sizeof(name));
     }
 
-    __u32 version;
-    __u8 axes;
-    __u8 buttons;
-    if (ioctl(fd, JSIOCGVERSION, &version) < 0 ||
-        ioctl(fd, JSIOCGAXES, &axes) < 0 ||
-        ioctl(fd, JSIOCGBUTTONS, &buttons) < 0) {
-        std::cerr << "Failed to get joystick info for " << device_path << std::endl;
-        close(fd);
-        return result; // Return empty object on error
-    }
-
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_GAMECONTROLLER) < 0) {
-        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+    __u8 axes, buttons;
+    if (ioctl(fd, JSIOCGAXES, &axes) < 0 || ioctl(fd, JSIOCGBUTTONS, &buttons) < 0) {
+        std::cerr << "[ERROR] Failed to get joystick info for " << device_path << std::endl;
         close(fd);
         return result;
     }
 
-    // Load the game controller mappings from the file
-    if (SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt") < 0) {
-        std::cerr << "Failed to load controller mappings: " << SDL_GetError() << std::endl;
+    if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) < 0) {
+        std::cerr << "[ERROR] SDL Init failed: " << SDL_GetError() << std::endl;
+        close(fd);
+        return result;
     }
 
-    // Find the joystick index from the device path
-    int device_index = std::stoi(device_path.substr(device_path.find_last_not_of("0123456789") + 1));
+    SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
-    // Open the joystick
-    SDL_Joystick* joystick = SDL_JoystickOpen(device_index);
+    int num_joysticks = SDL_NumJoysticks();
+    int detected_index = -1;
+    for (int i = 0; i < num_joysticks; i++) {
+        if (std::string(SDL_JoystickNameForIndex(i)) == name) {
+            detected_index = i;
+            break;
+        }
+    }
+
+    if (detected_index == -1) {
+        std::cerr << "[ERROR] No matching joystick found for " << name << std::endl;
+        SDL_Quit();
+        close(fd);
+        return result;
+    }
+
+    SDL_Joystick* joystick = SDL_JoystickOpen(detected_index);
     std::string mapping = "Unknown";
 
     if (joystick) {
-        char guid_str[33];
         SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
+        char guid_str[33];
         SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
 
-        // Check if there's a mapping for this GUID
-        if (SDL_IsGameController(device_index)) {
-            SDL_GameController* controller = SDL_GameControllerOpen(device_index);
+        if (SDL_IsGameController(detected_index)) {
+            SDL_GameController* controller = SDL_GameControllerOpen(detected_index);
             if (controller) {
-                mapping = SDL_GameControllerMapping(controller);
+                const char* controller_mapping = SDL_GameControllerMapping(controller);
+                if (controller_mapping) {
+                    mapping = controller_mapping;
+                }
                 SDL_GameControllerClose(controller);
             }
         }
+
         SDL_JoystickClose(joystick);
     }
 
     SDL_Quit();
+    close(fd);
 
-    json device_info = {
+    return {
         {"device", device_path},
         {"buttons", static_cast<int>(buttons)},
         {"axes", static_cast<int>(axes)},
         {"name", name},
         {"mapping", mapping}
     };
-
-    close(fd);
-    return device_info;
 }
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <device_path>" << std::endl;
+        std::cerr << "[ERROR] Usage: " << argv[0] << " <device_path>" << std::endl;
         return 1;
     }
 
@@ -96,12 +100,13 @@ int main(int argc, char* argv[]) {
     if (stat(device_path.c_str(), &buffer) == 0) {
         json device_info = getJoystickInfo(device_path);
         if (!device_info.empty()) {
-            std::cout << device_info.dump(4) << std::endl;
+            std::cout << device_info.dump(4) << std::endl; // JSON output only
         } else {
-            std::cerr << "No information found for device: " << device_path << std::endl;
+            std::cerr << "[ERROR] No information found for device: " << device_path << std::endl;
+            return 1;
         }
     } else {
-        std::cerr << "Device does not exist: " << device_path << std::endl;
+        std::cerr << "[ERROR] Device does not exist: " << device_path << std::endl;
         return 1;
     }
 

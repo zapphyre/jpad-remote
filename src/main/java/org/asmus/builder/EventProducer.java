@@ -1,28 +1,26 @@
 package org.asmus.builder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.asmus.model.*;
+import org.asmus.SDLJoystick;
+import org.asmus.model.Controller;
+import org.asmus.model.GamepadDbFileRow;
 import org.asmus.service.JoyWorker;
-import org.asmus.tool.AxisMapper;
-import org.asmus.tool.EventMapper;
-import org.asmus.introspect.impl.ReleaseIntrospector;
-import reactor.core.publisher.Flux;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static fs.watcher.FsWatcher.watch;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
@@ -30,14 +28,11 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 
 @Slf4j
 public class EventProducer {
-    static ObjectMapper mapper = new ObjectMapper();
-
-    ReleaseIntrospector introspector = new ReleaseIntrospector();
 
     @Getter
     JoyWorker worker = new JoyWorker();
 
-    public List<Runnable> watchForDevices(Integer ...ids) {
+    public List<Runnable> watchForDevices(Integer... ids) {
         return Arrays.stream(ids)
                 .map("/dev/input/js%01d"::formatted)
                 .peek(watchFsEvents(ENTRY_CREATE, ENTRY_DELETE))
@@ -50,7 +45,8 @@ public class EventProducer {
 
     Consumer<String> watchFsEvents(WatchEvent.Kind<?>... events) {
         return q -> {
-            AtomicReference<Runnable> teardown = new AtomicReference<>(() -> {});
+            AtomicReference<Runnable> teardown = new AtomicReference<>(() -> {
+            });
 
             try {
 
@@ -78,33 +74,63 @@ public class EventProducer {
 
     static Predicate<Controller> pathExists = q -> Files.exists(Path.of(q.device()));
 
-    public static Controller getControllerMappings(String path) {
-        try {
+    private static final List<GamepadDbFileRow> mappings;
 
-            InputStream in;
-            in = EventProducer.class.getResourceAsStream("/lib/gamepadPropsParametric");
-            if (in == null) {
-                in = Files.newInputStream(Path.of("lib/gamepadPropsParametric"));
+    static {
+        mappings = readGamepadFile("gamecontrollerdb.txt");
+    }
+
+    public static List<GamepadDbFileRow> readGamepadFile(String resourcePath) {
+        ClassLoader classLoader = EventProducer.class.getClassLoader();
+        List<GamepadDbFileRow> mappings = new LinkedList<>();
+
+        try (InputStream is = classLoader.getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                System.err.println("Resource not found: " + resourcePath);
+                return mappings;
             }
-
-            Path tempFile = Files.createTempFile("gamepadPropsParametric", null);
-            Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            tempFile.toFile().setExecutable(true);
-
-            ProcessBuilder processBuilder = new ProcessBuilder(tempFile.toString(), path);
-
-            Thread.sleep(200);
-            Process process = processBuilder.start();
-
-            BufferedReader stdOut = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String stdOutStr = stdOut.lines()
-                    .collect(Collectors.joining(System.lineSeparator()));
-
-            log.info(stdOutStr);
-            return mapper.readValue(stdOutStr, Controller.class);
-        } catch (IOException | InterruptedException e) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    GamepadDbFileRow row = GamepadDbFileRow.parse(line);
+                    if (row != null)
+                        mappings.add(row);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading resource file: " + e.getMessage());
         }
 
-        return null;
+        return mappings;
+    }
+
+    @SneakyThrows
+    public static Controller getControllerMappings(String path) {
+        int index = Integer.parseInt(path.substring(path.length() - 1));
+        SDLJoystick sdl;
+
+        try {
+            sdl = new SDLJoystick(index);
+        } catch (Exception e) {
+            return null;
+        }
+
+        String platform = System.getProperty("os.name");
+        int axis = sdl.getJoystickNumAxes() + sdl.getJoystickNumHats() * 2;
+
+        List<GamepadDbFileRow> byGuid = mappings.stream()
+                .filter(q -> q.getGuid().equals(sdl.getJoystickGUID()))
+                .toList();
+
+        List<GamepadDbFileRow> byName = mappings.stream()
+                .filter(q -> q.getName().equalsIgnoreCase(sdl.getJoystickName()))
+                .toList();
+
+        GamepadDbFileRow gamepadDef = byGuid.isEmpty() ? byName.getFirst() : byGuid.getFirst();
+
+        if (gamepadDef == null)
+            return null;
+
+        return new Controller(axis, sdl.getJoystickNumButtons(), path, gamepadDef.getMapping(), sdl.getJoystickName());
     }
 }

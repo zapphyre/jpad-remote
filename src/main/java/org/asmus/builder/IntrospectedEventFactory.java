@@ -66,15 +66,17 @@ public class IntrospectedEventFactory {
                 .forEach(qualify);
     }
 
+    Predicate<Map.Entry<String, Integer>> onlyDpValues = q -> q.getKey().contains("dp");
     public RawArrowSource getArrowsStream() {
         return axisStates -> {
             List<GamepadEvent> vertical = axisStates.entrySet().stream()
-                    .filter(notZeroFor(NamingConstants.ARROW_Y))
+                    .filter(notZeroFor(EButtonAxisMapping.UP.getInternal()))
                     .map(AxisMapper.mapVertical)
                     .toList();
 
             List<GamepadEvent> horizontal = axisStates.entrySet().stream()
-                    .filter(notZeroFor(NamingConstants.ARROW_X))
+                    .filter(onlyDpValues)
+                    .filter(notZeroFor(EButtonAxisMapping.LEFT.getInternal()))
                     .map(AxisMapper.mapHorizontal)
                     .toList();
 

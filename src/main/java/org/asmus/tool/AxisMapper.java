@@ -10,7 +10,7 @@ import java.util.function.Function;
 public class AxisMapper {
 
     public static Function<Map.Entry<String, Integer>, GamepadEvent> mapVertical =
-            q -> q.getKey().equals(NamingConstants.ARROW_Y) && q.getValue() > 0 ?
+            q -> q.getValue() > 0 ?
             GamepadEvent.builder()
                     .type(EButtonAxisMapping.DOWN)
                     .build() : GamepadEvent.builder()
@@ -18,7 +18,7 @@ public class AxisMapper {
             .build();
 
     public static Function<Map.Entry<String, Integer>, GamepadEvent> mapHorizontal =
-            q -> q.getKey().equals(NamingConstants.ARROW_X) && q.getValue() > 0 ?
+            q -> q.getValue() > 0 ?
             GamepadEvent.builder()
                     .type(EButtonAxisMapping.RIGHT)
                     .build() : GamepadEvent.builder()

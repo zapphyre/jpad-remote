@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static fs.watcher.FsWatcher.watch;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
@@ -124,6 +123,7 @@ public class EventProducer {
 
         List<GamepadDbFileRow> byName = mappings.stream()
                 .filter(q -> q.getName().equalsIgnoreCase(sdl.getJoystickName()))
+                .filter(q -> q.getPlatform().equalsIgnoreCase(platform))
                 .toList();
 
         GamepadDbFileRow gamepadDef = byGuid.isEmpty() ? byName.getFirst() : byGuid.getFirst();
@@ -131,6 +131,8 @@ public class EventProducer {
         if (gamepadDef == null)
             return null;
 
-        return new Controller(axis, sdl.getJoystickNumButtons(), path, gamepadDef.getMapping(), sdl.getJoystickName());
+        String controllerMapping = sdl.getControllerMapping();
+
+        return new Controller(axis, sdl.getJoystickNumButtons(), path, controllerMapping, sdl.getJoystickName());
     }
 }

@@ -7,7 +7,6 @@ import org.bbi.linuxjoy.LinuxJoystick;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -40,6 +39,9 @@ public class JoyWorker {
         }));
     }
 
+    Predicate<ButtonNamePosition> isAxis = ButtonNamePosition::isAxis;
+    Predicate<ButtonNamePosition> isHat = ButtonNamePosition::isHat;
+
     @SneakyThrows
     public Runnable watchingDevice(Controller controller) {
         LinuxJoystick j = new LinuxJoystick(controller.device(), controller.buttons(), controller.axes());
@@ -47,11 +49,11 @@ public class JoyWorker {
         List<ButtonNamePosition> mappings = translate(controller.mapping());
 
         List<ButtonNamePosition> axisMappings = mappings.stream()
-                .filter(ButtonNamePosition::axis)
+                .filter(isAxis.or(isHat))
                 .toList();
 
         List<ButtonNamePosition> buttonMappings = mappings.stream()
-                .filter(Predicate.not(ButtonNamePosition::axis))
+                .filter(Predicate.not(ButtonNamePosition::isAxis).and(Predicate.not(ButtonNamePosition::isHat)))
                 .toList();
 
         ControllerDevice device = new ControllerDevice(axisMappings, buttonMappings, j);
@@ -119,7 +121,7 @@ public class JoyWorker {
 
     record JoyStateMapper(LinuxJoystick joystick) {
         <T> Function<ButtonNamePosition, InputValue<T>> toIV(BiFunction<LinuxJoystick, Integer, T> getter) {
-            return q -> new InputValue<>(getter.apply(joystick, q.position()), q.buttonName());
+            return q -> new InputValue<>(getter.apply(joystick, q.getPosition()), q.getButtonName());
         }
     }
 }

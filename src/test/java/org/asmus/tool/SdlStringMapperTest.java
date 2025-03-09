@@ -19,8 +19,8 @@ public class SdlStringMapperTest {
 
         List<ButtonNamePosition> translate = translate(mapping);
 
-        List<ButtonNamePosition> axis = translate.stream().filter(ButtonNamePosition::axis).toList();
-        List<ButtonNamePosition> buttons = translate.stream().filter(Predicate.not(ButtonNamePosition::axis)).toList();
+        List<ButtonNamePosition> axis = translate.stream().filter(ButtonNamePosition::isAxis).toList();
+        List<ButtonNamePosition> buttons = translate.stream().filter(Predicate.not(ButtonNamePosition::isAxis)).toList();
 
         Assertions.assertEquals(8, axis.size());
         Assertions.assertEquals(11, buttons.size());

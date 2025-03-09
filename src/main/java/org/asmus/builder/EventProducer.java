@@ -73,66 +73,39 @@ public class EventProducer {
 
     static Predicate<Controller> pathExists = q -> Files.exists(Path.of(q.device()));
 
-    private static final List<GamepadDbFileRow> mappings;
-
-    static {
-        mappings = readGamepadFile("gamecontrollerdb.txt");
-    }
-
-    public static List<GamepadDbFileRow> readGamepadFile(String resourcePath) {
-        ClassLoader classLoader = EventProducer.class.getClassLoader();
-        List<GamepadDbFileRow> mappings = new LinkedList<>();
-
-        try (InputStream is = classLoader.getResourceAsStream(resourcePath)) {
-            if (is == null) {
-                System.err.println("Resource not found: " + resourcePath);
-                return mappings;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    GamepadDbFileRow row = GamepadDbFileRow.parse(line);
-                    if (row != null)
-                        mappings.add(row);
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading resource file: " + e.getMessage());
-        }
-
-        return mappings;
-    }
-
     @SneakyThrows
     public static Controller getControllerMappings(String path) {
+        System.out.println("trying to get mapping for " + path);
         int index = Integer.parseInt(path.substring(path.length() - 1));
-        SDLJoystick sdl;
+        SDLJoystick sdl = null;
+
+        String controllerMapping;
+        String joystickName;
+        int axis;
+        int joystickNumButtons;
 
         try {
             sdl = new SDLJoystick(index);
+            boolean open = sdl.open();
+
+            if (!open)
+                return null;
+
+            axis = sdl.getJoystickNumAxes() + sdl.getJoystickNumHats() * 2;
+            controllerMapping = sdl.getControllerMapping();
+            joystickName = sdl.getJoystickName();
+            joystickNumButtons = sdl.getJoystickNumButtons();
+
         } catch (Exception e) {
+            System.err.println("error while initializing SDL joystick: " + e.getMessage());
             return null;
+        } finally {
+            Optional.ofNullable(sdl).ifPresent(SDLJoystick::close);
         }
 
-        String platform = System.getProperty("os.name");
-        int axis = sdl.getJoystickNumAxes() + sdl.getJoystickNumHats() * 2;
+        System.out.println("recognized controller name: " + joystickName);
+        System.out.println("controller mapping: " + controllerMapping);
 
-        List<GamepadDbFileRow> byGuid = mappings.stream()
-                .filter(q -> q.getGuid().equals(sdl.getJoystickGUID()))
-                .toList();
-
-        List<GamepadDbFileRow> byName = mappings.stream()
-                .filter(q -> q.getName().equalsIgnoreCase(sdl.getJoystickName()))
-                .filter(q -> q.getPlatform().equalsIgnoreCase(platform))
-                .toList();
-
-        GamepadDbFileRow gamepadDef = byGuid.isEmpty() ? byName.getFirst() : byGuid.getFirst();
-
-        if (gamepadDef == null)
-            return null;
-
-        String controllerMapping = sdl.getControllerMapping();
-
-        return new Controller(axis, sdl.getJoystickNumButtons(), path, controllerMapping, sdl.getJoystickName());
+        return new Controller(axis, joystickNumButtons, path, controllerMapping, joystickName);
     }
 }

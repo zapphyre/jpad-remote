@@ -95,7 +95,6 @@ public class EventProducer {
             controllerMapping = sdl.getControllerMapping();
             joystickName = sdl.getJoystickName();
             joystickNumButtons = sdl.getJoystickNumButtons();
-
         } catch (Exception e) {
             System.err.println("error while initializing SDL joystick: " + e.getMessage());
             return null;

@@ -50,6 +50,7 @@ public class MultiplicityQualifier extends BaseQualifier {
             return;
         }
 
+        // last release of previously recorded push
         if (event.isRelease() && isActive(event)) {
             TimeFuture timeFuture = timingFutureMap.remove(event);
 

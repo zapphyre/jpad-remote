@@ -3,6 +3,7 @@ package org.asmus.builder;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.closure.button.OsDevice;
 import org.asmus.builder.closure.button.RawArrowSource;
+import org.asmus.digitizer.TriggerDigitizer;
 import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
@@ -18,7 +19,6 @@ import reactor.core.publisher.Sinks;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -53,11 +53,11 @@ public class IntrospectedEventFactory {
 
     List<ActuationBehaviour> behaviours = List.of(MODIFIER, LONG, PUSH, MULTIPLICITY);
 
-    Consumer<ButtonClick> qualify = c -> behaviours.forEach(q -> {
-        Optional.ofNullable(c)
-                .map(q.getIntrospector()::translate)
-                .ifPresent(q.getQualifier().useStream(qualifiedEventStream)::qualify);
-    });
+    Predicate<Map.Entry<String, Integer>> onlyDpValues = q -> q.getKey().contains("dp");
+
+    Consumer<ButtonClick> qualify = c -> behaviours.forEach(q -> Optional.ofNullable(c)
+            .map(q.getIntrospector()::translate)
+            .ifPresent(q.getQualifier().useStream(qualifiedEventStream)::qualify));
 
     public OsDevice getButtonStream() {
         GamepadStateMapper gamepadStateMapper = new GamepadStateMapper();
@@ -66,10 +66,10 @@ public class IntrospectedEventFactory {
                 .forEach(qualify);
     }
 
-    Predicate<Map.Entry<String, Integer>> onlyDpValues = q -> q.getKey().contains("dp");
     public RawArrowSource getArrowsStream() {
         return axisStates -> {
             List<GamepadEvent> vertical = axisStates.entrySet().stream()
+                    .filter(onlyDpValues)
                     .filter(notZeroFor(EButtonAxisMapping.UP.getInternal()))
                     .map(AxisMapper.mapVertical)
                     .toList();
@@ -84,11 +84,27 @@ public class IntrospectedEventFactory {
                     .map(q -> q.withQualified(EQualificationType.ARROW))
                     .map(q -> q.withModifiers(
                             MODIFIER.getIntrospector().getModifiersResetEvents().stream()
-                            .map(EButtonAxisMapping::getByName)
-                            .collect(Collectors.toSet())
+                                    .map(EButtonAxisMapping::getByName)
+                                    .collect(Collectors.toSet())
                     ))
                     .subscribe(qualifiedEventStream::tryEmitNext);
         };
+    }
+
+    static Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
+
+    public RawArrowSource rightTriggerStream() {
+        TriggerDigitizer triggerDigitizer = new TriggerDigitizer(qualifiedEventStream);
+        return q -> Optional.of(q)
+                .map(AxisMapper.getTriggerPosition(NamingConstants.RIGHT_TRIGGER))
+                .map(p -> p.withType(EButtonAxisMapping.TRIGGER_RIGHT))
+                .filter(p -> Math.abs(p.getPosition()) == TriggerDigitizer.MAX)
+                .map(p -> p.withModifiers(
+                        MODIFIER.getIntrospector().getModifiersResetEvents().stream()
+                                .map(EButtonAxisMapping::getByName)
+                                .collect(Collectors.toSet())
+                ))
+                .ifPresent(triggerDigitizer.digitize());
     }
 
     public Flux<GamepadEvent> getButtonEventStream() {

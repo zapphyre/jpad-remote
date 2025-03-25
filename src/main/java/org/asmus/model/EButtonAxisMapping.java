@@ -35,6 +35,13 @@ public enum EButtonAxisMapping {
     BUMPER_RIGHT("rightshoulder", false),
 
     OTHER("other", false),
+
+    STEP_POSITIVE("pushIn", false),
+    STEP_NEGATIVE("releaseOut", false),
+    LONG_ENGAGE("triggerlong", false),
+    ENGAGE("engage", false),
+    RELEASE("release", false),
+
     ;
 
     final String internal;

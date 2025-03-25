@@ -29,7 +29,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 public class EventProducer {
 
     @Getter
-    JoyWorker worker = new JoyWorker();
+    private final JoyWorker worker = new JoyWorker();
 
     public List<Runnable> watchForDevices(Integer... ids) {
         return Arrays.stream(ids)
@@ -70,6 +70,7 @@ public class EventProducer {
             }
         };
     }
+
 
     static Predicate<Controller> pathExists = q -> Files.exists(Path.of(q.device()));
 

@@ -37,6 +37,10 @@ public class Main {
         eventProducer.getWorker().getAxisStream()
                 .subscribe(arrowsStream::processArrowEvents);
 
+        RawArrowSource triggerStream = gamepadEventSourceBuilder.rightTriggerStream();
+        eventProducer.getWorker().getAxisStream()
+                .subscribe(triggerStream::processArrowEvents);
+
 //        osConnector.getButtonStream()
 //                .subscribe(System.out::println);
 

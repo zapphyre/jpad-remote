@@ -92,19 +92,27 @@ public class IntrospectedEventFactory {
     }
 
     static Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
+    static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition()) == TriggerDigitizer.MAX;
 
     public RawArrowSource rightTriggerStream() {
-        TriggerDigitizer triggerDigitizer = new TriggerDigitizer(qualifiedEventStream);
+        return genericDigitizedTriggerStream(NamingConstants.RIGHT_TRIGGER, EButtonAxisMapping.TRIGGER_RIGHT);
+    }
+
+    public RawArrowSource leftTriggerStream() {
+        return genericDigitizedTriggerStream(NamingConstants.LEFT_TRIGGER, EButtonAxisMapping.TRIGGER_LEFT);
+    }
+
+    RawArrowSource genericDigitizedTriggerStream(String axisName, EButtonAxisMapping axisMapping) {
+        TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
         return q -> Optional.of(q)
-                .map(AxisMapper.getTriggerPosition(NamingConstants.RIGHT_TRIGGER))
-                .map(p -> p.withType(EButtonAxisMapping.TRIGGER_RIGHT))
-                .filter(p -> Math.abs(p.getPosition()) == TriggerDigitizer.MAX)
-                .map(p -> p.withModifiers(
-                        MODIFIER.getIntrospector().getModifiersResetEvents().stream()
-                                .map(EButtonAxisMapping::getByName)
-                                .collect(Collectors.toSet())
+                .map(AxisMapper.getTriggerPosition(axisName))
+                .map(p -> p.withType(axisMapping))
+                .filter(edgeValue)
+                .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
+                        .map(EButtonAxisMapping::getByName)
+                        .collect(Collectors.toSet())
                 ))
-                .ifPresent(triggerDigitizer.digitize());
+                .ifPresent(digitizer.digitize());
     }
 
     public Flux<GamepadEvent> getButtonEventStream() {

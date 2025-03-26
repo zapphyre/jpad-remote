@@ -119,12 +119,12 @@ public class IntrospectedEventFactory {
                     if (prev == null) return false;
 
                     int pos = p.getPosition();
+
                     if (pos > 0)
                         return pos > prev;
                     else
                         return pos < prev;
                 })
-//                .filter(triggerEngaged)
                 .filter(edgeValue)
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByName)

@@ -38,8 +38,13 @@ public class Main {
                 .subscribe(arrowsStream::processArrowEvents);
 
         RawArrowSource triggerStream = gamepadEventSourceBuilder.rightTriggerStream();
+        RawArrowSource triggerLeft = gamepadEventSourceBuilder.leftTriggerStream();
+
         eventProducer.getWorker().getAxisStream()
                 .subscribe(triggerStream::processArrowEvents);
+
+        eventProducer.getWorker().getAxisStream()
+                .subscribe(triggerLeft::processArrowEvents);
 
 //        osConnector.getButtonStream()
 //                .subscribe(System.out::println);

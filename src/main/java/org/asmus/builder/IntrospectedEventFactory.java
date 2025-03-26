@@ -103,9 +103,8 @@ public class IntrospectedEventFactory {
         return genericDigitizedTriggerStream(NamingConstants.LEFT_TRIGGER, EButtonAxisMapping.TRIGGER_LEFT);
     }
 
-    Map<String, Integer> previous = new HashMap<>();
-    TriggerPosition lastLeft = TriggerPosition.builder().build();
     RawArrowSource genericDigitizedTriggerStream(String axisName, EButtonAxisMapping axisMapping) {
+        Map<String, Integer> previous = new HashMap<>();
         TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
         return q -> q.entrySet().stream()
                 .filter(AxisMapper.onlyTrigger(axisName))
@@ -120,10 +119,7 @@ public class IntrospectedEventFactory {
 
                     int pos = p.getPosition();
 
-                    if (pos > 0)
-                        return pos > prev;
-                    else
-                        return pos < prev;
+                    return pos > 0 ? pos > prev : pos < prev;
                 })
                 .filter(edgeValue)
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()

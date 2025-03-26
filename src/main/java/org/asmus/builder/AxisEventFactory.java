@@ -27,22 +27,6 @@ public class AxisEventFactory {
                 .map(EventMapper.translateAxis(NamingConstants.RIGHT_STICK_X, NamingConstants.RIGHT_STICK_Y));
     }
 
-    public TriggerPosProducer rightTriggerStream() {
-        return q -> q.getAxisStream()
-                .map(AxisMapper.getTriggerPosition(NamingConstants.RIGHT_TRIGGER))
-                .filter(triggerEngaged)
-                .map(p -> p.withType(EButtonAxisMapping.TRIGGER_RIGHT));
-    }
-
-    public TriggerPosProducer leftTriggerStream() {
-        return q -> q.getAxisStream()
-                .map(AxisMapper.getTriggerPosition(NamingConstants.LEFT_TRIGGER))
-                .filter(triggerEngaged)
-                .map(p -> p.withType(EButtonAxisMapping.TRIGGER_LEFT));
-    }
-
-    static Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
-
     static Predicate<Map<String, Integer>> notZeroFor(String axisName) {
         return q -> q.get(axisName) != 0;
     }}

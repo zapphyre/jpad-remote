@@ -29,10 +29,4 @@ public class AxisMapper {
     public static Predicate<Map.Entry<String, Integer>> onlyTrigger(String axisName) {
         return q -> q.getKey().equals(axisName);
     }
-
-    public static Function<Map<String, Integer>, TriggerPosition> getTriggerPosition(String axisName) {
-        return q -> TriggerPosition.builder()
-                .position(q.get(axisName))
-                .build();
-    }
 }

@@ -92,28 +92,28 @@ public class IntrospectedEventFactory {
         };
     }
 
-    static Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
     static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition()) == TriggerDigitizer.MAX;
 
     public RawArrowSource rightTriggerStream() {
-        return genericDigitizedTriggerStream(NamingConstants.RIGHT_TRIGGER, EButtonAxisMapping.TRIGGER_RIGHT);
+        return genericDigitizedTriggerStream(EButtonAxisMapping.TRIGGER_RIGHT);
     }
 
     public RawArrowSource leftTriggerStream() {
-        return genericDigitizedTriggerStream(NamingConstants.LEFT_TRIGGER, EButtonAxisMapping.TRIGGER_LEFT);
+        return genericDigitizedTriggerStream(EButtonAxisMapping.TRIGGER_LEFT);
     }
 
-    RawArrowSource genericDigitizedTriggerStream(String axisName, EButtonAxisMapping axisMapping) {
-        Map<String, Integer> previous = new HashMap<>();
+    RawArrowSource genericDigitizedTriggerStream(EButtonAxisMapping axisMapping) {
         TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
+        Map<EButtonAxisMapping, Integer> previous = new HashMap<>();
+
         return q -> q.entrySet().stream()
-                .filter(AxisMapper.onlyTrigger(axisName))
+                .filter(AxisMapper.onlyTrigger(axisMapping.getInternal()))
                 .map(p -> TriggerPosition.builder()
                         .position(p.getValue())
                         .type(axisMapping)
                         .build())
                 .filter(p -> {
-                    Integer prev = previous.put(axisName, p.getPosition());
+                    Integer prev = previous.put(axisMapping, p.getPosition());
 
                     if (prev == null) return false;
 

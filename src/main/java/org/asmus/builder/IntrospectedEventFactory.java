@@ -93,7 +93,7 @@ public class IntrospectedEventFactory {
     }
 
     static Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
-    static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition() - 1) == TriggerDigitizer.MAX;
+    static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition()) == TriggerDigitizer.MAX;
 
     public RawArrowSource rightTriggerStream() {
         return genericDigitizedTriggerStream(NamingConstants.RIGHT_TRIGGER, EButtonAxisMapping.TRIGGER_RIGHT);
@@ -107,18 +107,31 @@ public class IntrospectedEventFactory {
     TriggerPosition lastLeft = TriggerPosition.builder().build();
     RawArrowSource genericDigitizedTriggerStream(String axisName, EButtonAxisMapping axisMapping) {
         TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
-        return q -> Optional.of(q)
-                .map(AxisMapper.getTriggerPosition(axisName))
-                .map(p -> p.withType(axisMapping))
-                .map(p -> {})
+        return q -> q.entrySet().stream()
+                .filter(AxisMapper.onlyTrigger(axisName))
+                .map(p -> TriggerPosition.builder()
+                        .position(p.getValue())
+                        .type(axisMapping)
+                        .build())
+                .filter(p -> {
+                    Integer prev = previous.put(axisName, p.getPosition());
+
+                    if (prev == null) return false;
+
+                    int pos = p.getPosition();
+                    if (pos > 0)
+                        return pos > prev;
+                    else
+                        return pos < prev;
+                })
+//                .filter(triggerEngaged)
                 .filter(edgeValue)
-//                .filter(p -> !p.equals(lastLeft))
-//                .map( p -> lastLeft = p)
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByName)
                         .collect(Collectors.toSet())
                 ))
-                .ifPresent(digitizer.digitize());
+                .forEach(digitizer.digitize());
+
     }
 
     public Flux<GamepadEvent> getButtonEventStream() {

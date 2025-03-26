@@ -5,6 +5,7 @@ import org.asmus.model.*;
 
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @UtilityClass
 public class AxisMapper {
@@ -24,6 +25,10 @@ public class AxisMapper {
                     .build() : GamepadEvent.builder()
             .type(EButtonAxisMapping.LEFT)
             .build();
+
+    public static Predicate<Map.Entry<String, Integer>> onlyTrigger(String axisName) {
+        return q -> q.getKey().equals(axisName);
+    }
 
     public static Function<Map<String, Integer>, TriggerPosition> getTriggerPosition(String axisName) {
         return q -> TriggerPosition.builder()

@@ -13,7 +13,7 @@ public class TriggerDigitizer {
 
     private final long QUICK_MS = 210;
     public static final int MAX = 32767;
-    private final int MIN = -32767;
+    public static final int MIN = -32767;
     private EQualificationType last;
 
     private final Sinks.Many<GamepadEvent> qualifiedEventStream;

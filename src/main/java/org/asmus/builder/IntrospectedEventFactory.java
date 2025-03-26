@@ -17,6 +17,7 @@ import org.asmus.tool.AxisMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -92,7 +93,7 @@ public class IntrospectedEventFactory {
     }
 
     static Predicate<TriggerPosition> triggerEngaged = q -> q.getPosition() != -32767;
-    static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition()) == TriggerDigitizer.MAX;
+    static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition() - 1) == TriggerDigitizer.MAX;
 
     public RawArrowSource rightTriggerStream() {
         return genericDigitizedTriggerStream(NamingConstants.RIGHT_TRIGGER, EButtonAxisMapping.TRIGGER_RIGHT);
@@ -102,12 +103,17 @@ public class IntrospectedEventFactory {
         return genericDigitizedTriggerStream(NamingConstants.LEFT_TRIGGER, EButtonAxisMapping.TRIGGER_LEFT);
     }
 
+    Map<String, Integer> previous = new HashMap<>();
+    TriggerPosition lastLeft = TriggerPosition.builder().build();
     RawArrowSource genericDigitizedTriggerStream(String axisName, EButtonAxisMapping axisMapping) {
         TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
         return q -> Optional.of(q)
                 .map(AxisMapper.getTriggerPosition(axisName))
                 .map(p -> p.withType(axisMapping))
+                .map(p -> {})
                 .filter(edgeValue)
+//                .filter(p -> !p.equals(lastLeft))
+//                .map( p -> lastLeft = p)
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByName)
                         .collect(Collectors.toSet())

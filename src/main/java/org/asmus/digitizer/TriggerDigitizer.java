@@ -1,7 +1,6 @@
 package org.asmus.digitizer;
 
 import lombok.RequiredArgsConstructor;
-import org.asmus.model.EButtonAxisMapping;
 import org.asmus.model.EQualificationType;
 import org.asmus.model.GamepadEvent;
 import org.asmus.model.TriggerPosition;
@@ -15,7 +14,7 @@ public class TriggerDigitizer {
     private final long QUICK_MS = 210;
     public static final int MAX = 32767;
     private final int MIN = -32767;
-    private EButtonAxisMapping last;
+    private EQualificationType last;
 
     private final Sinks.Many<GamepadEvent> qualifiedEventStream;
 
@@ -26,8 +25,8 @@ public class TriggerDigitizer {
             current = current.getNext(q.getPosition(), current);
 
             qualifiedEventStream.tryEmitNext(GamepadEvent.builder()
-                    .qualified(EQualificationType.PUSH)
-                    .type(last = current.getEmittent())
+                    .type(q.getType())
+                    .qualified(last = current.getEmittent())
                     .modifiers(q.getModifiers())
                     .build());
         };
@@ -42,7 +41,7 @@ public class TriggerDigitizer {
 
         abstract TriggerState getNext(int pos, TriggerState prev);
 
-        abstract EButtonAxisMapping getEmittent();
+        abstract EQualificationType getEmittent();
 
         long getTriggerTime() {
             return triggerTime;
@@ -59,8 +58,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EButtonAxisMapping getEmittent() {
-            return EButtonAxisMapping.RELEASE;
+        EQualificationType getEmittent() {
+            return EQualificationType.RELEASE;
         }
     }
 
@@ -74,8 +73,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EButtonAxisMapping getEmittent() {
-            return EButtonAxisMapping.ENGAGE;
+        EQualificationType getEmittent() {
+            return EQualificationType.ENGAGE;
         }
     }
 
@@ -89,8 +88,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EButtonAxisMapping getEmittent() {
-            return EButtonAxisMapping.STEP_POSITIVE;
+        EQualificationType getEmittent() {
+            return EQualificationType.STEP_POSITIVE;
         }
     }
 
@@ -104,8 +103,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EButtonAxisMapping getEmittent() {
-            return EButtonAxisMapping.STEP_NEGATIVE;
+        EQualificationType getEmittent() {
+            return EQualificationType.STEP_NEGATIVE;
         }
     }
 }

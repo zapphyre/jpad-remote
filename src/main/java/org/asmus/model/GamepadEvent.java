@@ -1,11 +1,9 @@
 package org.asmus.model;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.With;
 
-import java.util.List;
 import java.util.Set;
 
 @With
@@ -19,6 +17,7 @@ public class GamepadEvent {
     EMultiplicity multiplicity = EMultiplicity.CLICK;
     boolean longPress;
     Set<EButtonAxisMapping> modifiers;
+    ELogicalEventType logicalEventType;
 
     @Builder.Default
     EQualificationType qualified = EQualificationType.MULTIPLE;

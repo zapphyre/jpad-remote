@@ -71,13 +71,13 @@ public class IntrospectedEventFactory {
         return axisStates -> {
             List<GamepadEvent> vertical = axisStates.entrySet().stream()
                     .filter(onlyDpValues)
-                    .filter(notZeroFor(EButtonAxisMapping.UP.getInternal()))
+                    .filter(notZeroFor(EButtonAxisMapping.UP.getMapping()))
                     .map(AxisMapper.mapVertical)
                     .toList();
 
             List<GamepadEvent> horizontal = axisStates.entrySet().stream()
                     .filter(onlyDpValues)
-                    .filter(notZeroFor(EButtonAxisMapping.LEFT.getInternal()))
+                    .filter(notZeroFor(EButtonAxisMapping.LEFT.getMapping()))
                     .map(AxisMapper.mapHorizontal)
                     .toList();
 
@@ -85,7 +85,7 @@ public class IntrospectedEventFactory {
                     .map(q -> q.withQualified(EQualificationType.ARROW))
                     .map(q -> q.withModifiers(
                             MODIFIER.getIntrospector().getModifiersResetEvents().stream()
-                                    .map(EButtonAxisMapping::getByName)
+                                    .map(EButtonAxisMapping::getByMappingName)
                                     .collect(Collectors.toSet())
                     ))
                     .subscribe(qualifiedEventStream::tryEmitNext);
@@ -95,19 +95,19 @@ public class IntrospectedEventFactory {
     static Predicate<TriggerPosition> edgeValue = q -> Math.abs(q.getPosition()) == TriggerDigitizer.MAX;
 
     public RawArrowSource rightTriggerStream() {
-        return genericDigitizedTriggerStream(EButtonAxisMapping.TRIGGER_RIGHT);
+        return genericDigitizedTriggerProcessor(EButtonAxisMapping.TRIGGER_RIGHT);
     }
 
     public RawArrowSource leftTriggerStream() {
-        return genericDigitizedTriggerStream(EButtonAxisMapping.TRIGGER_LEFT);
+        return genericDigitizedTriggerProcessor(EButtonAxisMapping.TRIGGER_LEFT);
     }
 
-    RawArrowSource genericDigitizedTriggerStream(EButtonAxisMapping axisMapping) {
+    RawArrowSource genericDigitizedTriggerProcessor(EButtonAxisMapping axisMapping) {
         TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
         Map<EButtonAxisMapping, Integer> previous = new HashMap<>();
 
         return q -> q.entrySet().stream()
-                .filter(AxisMapper.onlyTrigger(axisMapping.getInternal()))
+                .filter(AxisMapper.onlyTrigger(axisMapping.getMapping()))
                 .map(p -> TriggerPosition.builder()
                         .position(p.getValue())
                         .type(axisMapping)
@@ -123,7 +123,7 @@ public class IntrospectedEventFactory {
                 })
                 .filter(edgeValue)
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
-                        .map(EButtonAxisMapping::getByName)
+                        .map(EButtonAxisMapping::getByMappingName)
                         .collect(Collectors.toSet())
                 ))
                 .forEach(digitizer.digitize());

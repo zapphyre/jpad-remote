@@ -1,6 +1,5 @@
 package org.asmus.qualifier.impl;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.EButtonAxisMapping;
@@ -27,7 +26,7 @@ public abstract class BaseQualifier implements QualifyBuilder, Qualifier {
 
     GamepadEvent toGamepadEventWith(ButtonClick q) {
         return GamepadEvent.builder()
-                .type(EButtonAxisMapping.getByName(q.getRelease().getName()))
+                .type(EButtonAxisMapping.getByMappingName(q.getRelease().getName()))
                 .longPress(computeIsLongPress(q))
                 .modifiers(convertModifiers(q))
                 .eventName(q.getRelease().getName())
@@ -36,7 +35,7 @@ public abstract class BaseQualifier implements QualifyBuilder, Qualifier {
 
     Set<EButtonAxisMapping> convertModifiers(ButtonClick click) {
         return click.getModifiers().stream()
-                .map(EButtonAxisMapping::getByName)
+                .map(EButtonAxisMapping::getByMappingName)
                 .collect(Collectors.toSet());
     }
 

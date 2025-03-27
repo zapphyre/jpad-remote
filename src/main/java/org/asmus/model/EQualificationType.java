@@ -6,10 +6,5 @@ public enum EQualificationType {
     RELEASE,
     MULTIPLE,
 
-    STEP_POSITIVE,
-    STEP_NEGATIVE,
-    LONG_ENGAGE,
-    ENGAGE,
-
     ARROW;
 }

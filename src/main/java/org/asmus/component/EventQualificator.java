@@ -7,7 +7,6 @@ import org.asmus.model.*;
 import reactor.core.publisher.Sinks;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -47,7 +46,7 @@ public class EventQualificator {
 
     Function<ButtonClick, GamepadEvent> toGamepadEventWith(EMultiplicity multiplicity) {
         return q -> GamepadEvent.builder()
-                .type(EButtonAxisMapping.getByName(q.getRelease().getName()))
+                .type(EButtonAxisMapping.getByMappingName(q.getRelease().getName()))
                 .multiplicity(multiplicity)
                 .longPress(computeIsLongPress(q))
                 .modifiers(convertModifiers(q))
@@ -57,7 +56,7 @@ public class EventQualificator {
 
     Set<EButtonAxisMapping> convertModifiers(ButtonClick click) {
         return click.getModifiers().stream()
-                .map(EButtonAxisMapping::getByName)
+                .map(EButtonAxisMapping::getByMappingName)
                 .collect(Collectors.toSet());
     }
 

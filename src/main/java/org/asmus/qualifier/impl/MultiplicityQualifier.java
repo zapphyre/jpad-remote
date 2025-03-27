@@ -1,7 +1,6 @@
 package org.asmus.qualifier.impl;
 
 import org.asmus.model.*;
-import reactor.core.publisher.Sinks;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +76,7 @@ public class MultiplicityQualifier extends BaseQualifier {
         return GamepadEvent.builder()
                 .multiplicity(EMultiplicity.getByClickCount(tf.multiplicity))
                 .eventName(tf.evt.getName())
-                .type(EButtonAxisMapping.getByName(tf.evt.getName()))
+                .type(EButtonAxisMapping.getByMappingName(tf.evt.getName()))
                 .longPress(tf.longClick)
                 .qualified(EQualificationType.MULTIPLE)
                 .build();

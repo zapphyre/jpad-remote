@@ -1,7 +1,7 @@
 package org.asmus.digitizer;
 
 import lombok.RequiredArgsConstructor;
-import org.asmus.model.EQualificationType;
+import org.asmus.model.ELogicalEventType;
 import org.asmus.model.GamepadEvent;
 import org.asmus.model.TriggerPosition;
 import reactor.core.publisher.Sinks;
@@ -14,7 +14,7 @@ public class TriggerDigitizer {
     private final long QUICK_MS = 210;
     public static final int MAX = 32767;
     public static final int MIN = -32767;
-    private EQualificationType last;
+    private ELogicalEventType last;
 
     private final Sinks.Many<GamepadEvent> qualifiedEventStream;
 
@@ -25,8 +25,8 @@ public class TriggerDigitizer {
             current = current.getNext(q.getPosition(), current);
 
             qualifiedEventStream.tryEmitNext(GamepadEvent.builder()
+                    .logicalEventType(last = current.getLogicalType())
                     .type(q.getType())
-                    .qualified(last = current.getEmittent())
                     .modifiers(q.getModifiers())
                     .build());
         };
@@ -41,7 +41,7 @@ public class TriggerDigitizer {
 
         abstract TriggerState getNext(int pos, TriggerState prev);
 
-        abstract EQualificationType getEmittent();
+        abstract ELogicalEventType getLogicalType();
 
         long getTriggerTime() {
             return triggerTime;
@@ -58,8 +58,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EQualificationType getEmittent() {
-            return EQualificationType.RELEASE;
+        ELogicalEventType getLogicalType() {
+            return ELogicalEventType.RELEASE;
         }
     }
 
@@ -73,8 +73,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EQualificationType getEmittent() {
-            return EQualificationType.ENGAGE;
+        ELogicalEventType getLogicalType() {
+            return ELogicalEventType.ENGAGE;
         }
     }
 
@@ -88,8 +88,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EQualificationType getEmittent() {
-            return EQualificationType.STEP_POSITIVE;
+        ELogicalEventType getLogicalType() {
+            return ELogicalEventType.STEP_POSITIVE;
         }
     }
 
@@ -103,8 +103,8 @@ public class TriggerDigitizer {
         }
 
         @Override
-        EQualificationType getEmittent() {
-            return EQualificationType.STEP_NEGATIVE;
+        ELogicalEventType getLogicalType() {
+            return ELogicalEventType.STEP_NEGATIVE;
         }
     }
 }

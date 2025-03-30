@@ -18,28 +18,27 @@ public enum EButtonAxisMapping {
     LEFT_STICK_CLICK("leftstick", false),
     RIGHT_STICK_CLICK("rightstick", false),
 
-    LEFT_STICK_X(NamingConstants.LEFT_STICK_X, true),
-    LEFT_STICK_Y(NamingConstants.LEFT_STICK_Y, true),
-    RIGHT_STICK_X(NamingConstants.RIGHT_STICK_X, true),
-    RIGHT_STICK_Y(NamingConstants.RIGHT_STICK_Y, true),
+    BUMPER_LEFT("leftshoulder", false),
+    BUMPER_RIGHT("rightshoulder", false),
+
+    OTHER("other", false),
 
     UP("dpup", false),
     DOWN("dpdown", false),
     LEFT("dpleft", false),
     RIGHT("dpright", false),
 
+    LEFT_STICK_X(NamingConstants.LEFT_STICK_X, true),
+    LEFT_STICK_Y(NamingConstants.LEFT_STICK_Y, true),
+    RIGHT_STICK_X(NamingConstants.RIGHT_STICK_X, true),
+    RIGHT_STICK_Y(NamingConstants.RIGHT_STICK_Y, true),
+
     TRIGGER_LEFT(NamingConstants.LEFT_TRIGGER, true),
     TRIGGER_RIGHT(NamingConstants.RIGHT_TRIGGER, true),
-
-    BUMPER_LEFT("leftshoulder", false),
-    BUMPER_RIGHT("rightshoulder", false),
-
-    OTHER("other", false),
 
     ;
 
     final String mapping;
-    final String prefix;
     final boolean analog;
 
     public static EButtonAxisMapping getByMappingName(final String name) {

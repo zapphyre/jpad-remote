@@ -11,5 +11,7 @@ public enum ELogicalEventType {
     RIGHT,
     UP,
     DOWN,
-    CIRCLE,
+
+    FIZZY,
+    CENTER
 }

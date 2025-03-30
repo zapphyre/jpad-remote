@@ -3,6 +3,7 @@ package org.asmus.builder;
 import org.asmus.behaviour.ActuationBehaviour;
 import org.asmus.builder.closure.button.OsDevice;
 import org.asmus.builder.closure.button.RawArrowSource;
+import org.asmus.digitizer.AxisDigitizer;
 import org.asmus.digitizer.TriggerDigitizer;
 import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
@@ -14,6 +15,7 @@ import org.asmus.qualifier.impl.ImmediateQualifier;
 import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
 import org.asmus.qualifier.impl.MultiplicityQualifier;
 import org.asmus.tool.AxisMapper;
+import org.asmus.tool.EventMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
@@ -102,32 +104,69 @@ public class IntrospectedEventFactory {
         return genericDigitizedTriggerProcessor(EButtonAxisMapping.TRIGGER_LEFT);
     }
 
+    public RawArrowSource leftStickStream() {
+        return genericDigitizedStickAxisProcessor(EButtonAxisMapping.LEFT_STICK_X, EButtonAxisMapping.LEFT_STICK_Y);
+    }
+
+    public RawArrowSource rightStickStream() {
+        return genericDigitizedStickAxisProcessor(EButtonAxisMapping.RIGHT_STICK_X, EButtonAxisMapping.RIGHT_STICK_Y);
+    }
+
+    RawArrowSource genericDigitizedStickAxisProcessor(EButtonAxisMapping x, EButtonAxisMapping y) {
+        AxisDigitizer digitizer = new AxisDigitizer(qualifiedEventStream);
+        Map<EButtonAxisMapping, Integer> mem = new HashMap<>();
+        return q -> {
+            Integer xVal = q.get(x.getMapping());
+            Integer yVal = q.get(y.getMapping());
+
+            if (still(x, mem).test(xVal) && still(y, mem).test(yVal))
+                return;
+
+            Optional.of(Map.of(x.getMapping(), xVal, y.getMapping(), yVal))
+                    .map(EventMapper.translateAxis(x.getMapping(), y.getMapping()))
+                    .map(EventMapper.translateAxisMove)
+                    .ifPresent(digitizer.digitize(x));
+        };
+    }
+
+    Predicate<Integer> still(EButtonAxisMapping ax, Map<EButtonAxisMapping, Integer> mem) {
+        return q -> {
+            Integer prev = mem.put(ax, q);
+
+            if (prev == null) return false;
+
+            return prev.equals(q);
+        };
+    }
+
     RawArrowSource genericDigitizedTriggerProcessor(EButtonAxisMapping axisMapping) {
         TriggerDigitizer digitizer = new TriggerDigitizer(qualifiedEventStream);
-        Map<EButtonAxisMapping, Integer> previous = new HashMap<>();
+        Map<EButtonAxisMapping, Integer> mem = new HashMap<>();
 
         return q -> q.entrySet().stream()
-                .filter(AxisMapper.onlyTrigger(axisMapping.getMapping()))
+                .filter(actionFor(axisMapping, mem))
                 .map(p -> TriggerPosition.builder()
                         .position(p.getValue())
                         .type(axisMapping)
                         .build())
-                .filter(p -> {
-                    Integer prev = previous.put(axisMapping, p.getPosition());
-
-                    if (prev == null) return false;
-
-                    int pos = p.getPosition();
-
-                    return pos > 0 ? pos > prev : pos < prev;
-                })
                 .filter(edgeValue)
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByMappingName)
                         .collect(Collectors.toSet())
                 ))
                 .forEach(digitizer.digitize());
+    }
 
+    Predicate<Map.Entry<String, Integer>> actionFor(EButtonAxisMapping name, Map<EButtonAxisMapping, Integer> mem) {
+        return AxisMapper.valueFor(name.getMapping()).and(p -> {
+            Integer prev = mem.put(name, p.getValue());
+
+            if (prev == null) return false;
+
+            int pos = p.getValue();
+
+            return pos > 0 ? pos > prev : pos < prev;
+        });
     }
 
     public Flux<GamepadEvent> getButtonEventStream() {

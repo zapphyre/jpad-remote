@@ -1,6 +1,7 @@
 package org.asmus.tool;
 
 import lombok.experimental.UtilityClass;
+import org.asmus.model.ELogicalEventType;
 import org.asmus.model.EPolarDirection;
 import org.asmus.model.PolarCoords;
 
@@ -27,25 +28,52 @@ public class EventMapper {
 
     int THRESHOLD = 2_000;
 
-    public static EPolarDirection translateAxisMove(PolarCoords coords) {
+    public static Function<PolarCoords, ELogicalEventType> translateAxisMove = coords -> {
         double theta = coords.theta();
         double r = coords.radius();
 
-        if (theta == 0)
-            return CENTER;
+//        System.out.println("theta: " + theta + ", radius: " + r);
 
-        if (r < THRESHOLD)
-            return FIZZY;
+        if (theta == 0) {
+            return ELogicalEventType.CENTER;
+        }
 
-        if (theta < 0.5 && theta > -0.5)
-            return RIGHT;
-        else if (theta < -0.5 && theta > -2.5)
-            return LEFT;
-        else if (theta > 0.5 && theta < 2.5)
-            return DOWN;
+        if (r < THRESHOLD) {
+            return ELogicalEventType.CENTER;
+        }
 
-        return LEFT;
+        if (theta >= -0.785 && theta < 0.785) {
+            return ELogicalEventType.RIGHT;
+        } else if (theta >= 0.785 && theta < 2.356) {
+            return ELogicalEventType.DOWN;
+        } else if (theta >= -2.356 && theta < -0.785) {
+            return ELogicalEventType.UP;
+        }
+
+        return ELogicalEventType.LEFT;
+    };
+
+    public static abstract class Heading {
+//        public abstract Heading nextHeading(Heading prev);
+//        public abstract EPolarDirection getHeading();
     }
+
+    public static class Noop extends Heading {
+//        @Override
+        public Heading nextHeading(Heading prev) {
+            return this;
+        }
+
+//        @Override
+        public EPolarDirection getHeading() {
+            return FIZZY;
+        }
+    }
+    public static class Up extends Heading {}
+    public static class Down extends Heading {}
+    public static class Left extends Heading {}
+    public static class Right extends Heading {}
+    public static class Center extends Heading {}
 
     static double getTheta(double x, double y) {
         return Math.atan2(y, x);

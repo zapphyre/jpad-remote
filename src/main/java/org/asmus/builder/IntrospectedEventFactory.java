@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class IntrospectedEventFactory {
     private final Sinks.Many<GamepadEvent> qualifiedEventStream = Sinks.many().multicast().directBestEffort();
@@ -61,7 +62,6 @@ public class IntrospectedEventFactory {
 
     Consumer<ButtonClick> qualify = c -> behaviours.forEach(q -> Optional.ofNullable(c)
             .map(q.getIntrospector()::translate)
-//            .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents()))
             .ifPresent(q.getQualifier().useStream(qualifiedEventStream)::qualify));
 
     public OsDevice getButtonStream() {
@@ -171,7 +171,7 @@ public class IntrospectedEventFactory {
     }
 
     Map<EButtonAxisMapping, Set<EButtonAxisMapping>> triggerModifierMap = new HashMap<>();
-    Set<EButtonAxisMapping> modifiers = new HashSet<>();
+    List<EButtonAxisMapping> modifiers = new LinkedList<>();
 
     public Flux<GamepadEvent> getButtonEventStream() {
         return qualifiedEventStream.asFlux()
@@ -179,26 +179,19 @@ public class IntrospectedEventFactory {
                             Set<EButtonAxisMapping> m = Optional.ofNullable(q.getModifiers())
                                     .orElse(Set.of());
 
-//                            Set<EButtonAxisMapping> mods = triggerModifierMap.remove(q.getType());
-
-
-//                    System.out.println("modifiers: " + m);Set.of()
-
                             if (modifiers.isEmpty() && m.isEmpty()) return true;
 
                             q.getModifiers().addAll(modifiers);
 
-                            boolean b = modifiers.isEmpty() ?
-                                    modifiers.addAll(m) : !modifiers.remove(q.getType());
-
-//                            triggerModifierMap.remove()
-
-//                    System.out.println("result: " + b);
-
-                            return b;
+                    return modifiers.isEmpty() ?
+                            modifiers.addAll(twice(m)) : !modifiers.remove(q.getType());
                         }
                 )
                 .publishOn(Schedulers.parallel())
                 ;
+    }
+
+    List<EButtonAxisMapping> twice(Set<EButtonAxisMapping> m) {
+        return Stream.of(m, m).flatMap(Collection::stream).toList();
     }
 }

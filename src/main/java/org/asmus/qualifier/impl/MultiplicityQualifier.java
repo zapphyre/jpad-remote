@@ -1,5 +1,6 @@
 package org.asmus.qualifier.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.asmus.model.*;
 
 import java.util.HashMap;
@@ -8,9 +9,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public class MultiplicityQualifier extends BaseQualifier {
 
     Map<ButtonEvent, TimeFuture> timingFutureMap = new HashMap<>();
@@ -60,7 +63,7 @@ public class MultiplicityQualifier extends BaseQualifier {
             boolean longClick = delta > 410;
 //            System.out.println("delta: " + delta);
 
-            ScheduledFuture<?> future = Executors.newScheduledThreadPool(4)
+            ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor()
                     .schedule(() -> propagateEvent(event), longStep, TimeUnit.MILLISECONDS);
             TimeFuture tf = new TimeFuture(now, timeFuture.multiplicity, longClick, event, future);
             timingFutureMap.put(event, tf);

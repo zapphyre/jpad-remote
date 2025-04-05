@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.With;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @With
@@ -16,7 +17,8 @@ public class GamepadEvent {
     @Builder.Default
     EMultiplicity multiplicity = EMultiplicity.CLICK;
     boolean longPress;
-    Set<EButtonAxisMapping> modifiers;
+    @Builder.Default
+    Set<EButtonAxisMapping> modifiers = new HashSet<>();
     ELogicalEventType logicalEventType;
 
     @Builder.Default

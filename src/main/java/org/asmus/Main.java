@@ -24,59 +24,29 @@ public class Main {
 
         IntrospectedEventFactory gamepadEventSourceBuilder = new IntrospectedEventFactory();
 
-        OsDevice wrapper = gamepadEventSourceBuilder.getButtonStream();
+        OsDevice buttonProcessor = gamepadEventSourceBuilder.getButtonStream();
+        RawArrowSource arrowsStream = gamepadEventSourceBuilder.getArrowsStream();
+        RawArrowSource triggerStream = gamepadEventSourceBuilder.rightTriggerStream();
+        RawArrowSource triggerLeft = gamepadEventSourceBuilder.leftTriggerStream();
 
         eventProducer.getWorker().getButtonStream()
-                .subscribe(wrapper::processButtonEvents);
-//
+                .subscribe(buttonProcessor::processButtonEvents);
+
+        eventProducer.getWorker().getAxisStream()
+                .subscribe(arrowsStream::processArrowEvents);
+
+        // subscribe to all events
         gamepadEventSourceBuilder.getButtonEventStream()
                 .log()
                 .subscribe();
 
-        RawArrowSource arrowsStream = gamepadEventSourceBuilder.getArrowsStream();
-        eventProducer.getWorker().getAxisStream()
-                .subscribe(arrowsStream::processArrowEvents);
-
-        RawArrowSource triggerStream = gamepadEventSourceBuilder.rightTriggerStream();
-        RawArrowSource triggerLeft = gamepadEventSourceBuilder.leftTriggerStream();
-
-        eventProducer.getWorker().getAxisStream()
-                .subscribe(triggerStream::processArrowEvents);
-
-        eventProducer.getWorker().getAxisStream()
-                .subscribe(triggerLeft::processArrowEvents);
-
-        eventProducer.getWorker().getAxisStream()
-                .subscribe(gamepadEventSourceBuilder.leftStickStream()::processArrowEvents);
-        eventProducer.getWorker().getAxisStream()
-                .subscribe(gamepadEventSourceBuilder.rightStickStream()::processArrowEvents);
+//        eventProducer.getWorker().getAxisStream()
+//                .subscribe(gamepadEventSourceBuilder.leftStickStream()::processArrowEvents);
+//        eventProducer.getWorker().getAxisStream()
+//                .subscribe(gamepadEventSourceBuilder.rightStickStream()::processArrowEvents);
 
 //        osConnector.getButtonStream()
 //                .subscribe(System.out::println);
 
-//        timedButtonGamepadFactory.getArrowsStream()
-//                .subscribe(System.out::println);
-//
-//        timedButtonGamepadFactory.getTriggerStream()
-//                .subscribe(System.out::println);
-//
-//        timedButtonGamepadFactory.getArrowsStream()
-//                .subscribe(System.out::println);
-
-//        SDLJoystick sdl = new SDLJoystick(0);
-//        int index = 0;
-//        String guid = sdl.getJoystickGUID();
-//        int axes = sdl.getJoystickNumAxes();
-//        int buttons = sdl.getJoystickNumButtons();
-//        String joystickName = sdl.getJoystickName();
-//        int joystickNumHats = sdl.getJoystickNumHats();
-//
-//        if (guid != null) {
-//            System.out.printf("GUID: %s, Name: %s, Axes: %d, Buttons: %d%n, Hats: %d%n", guid,joystickName, axes, buttons, joystickNumHats);
-//        } else {
-//            System.out.println("No joystick at index " + index);
-//        }
     }
-
-
 }

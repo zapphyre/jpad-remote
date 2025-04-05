@@ -3,11 +3,13 @@ package org.asmus.qualifier.impl;
 import org.asmus.model.*;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class MultiplicityQualifier extends BaseQualifier {
 
@@ -55,9 +57,10 @@ public class MultiplicityQualifier extends BaseQualifier {
 
             long now = System.currentTimeMillis();
             long delta = now - timeFuture.time;
-            boolean longClick = delta > 150;
+            boolean longClick = delta > 410;
+//            System.out.println("delta: " + delta);
 
-            ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor()
+            ScheduledFuture<?> future = Executors.newScheduledThreadPool(4)
                     .schedule(() -> propagateEvent(event), longStep, TimeUnit.MILLISECONDS);
             TimeFuture tf = new TimeFuture(now, timeFuture.multiplicity, longClick, event, future);
             timingFutureMap.put(event, tf);
@@ -65,7 +68,7 @@ public class MultiplicityQualifier extends BaseQualifier {
     }
 
     boolean isChainingPossible(ButtonEvent evt) {
-        return System.currentTimeMillis() - timingFutureMap.get(evt).time < 2100;
+        return System.currentTimeMillis() - timingFutureMap.get(evt).time < 210;
     }
 
     boolean isActive(ButtonEvent evt) {

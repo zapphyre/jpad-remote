@@ -9,7 +9,10 @@ import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.mapper.GamepadStateMapper;
-import org.asmus.model.*;
+import org.asmus.model.ButtonClick;
+import org.asmus.model.EButtonAxisMapping;
+import org.asmus.model.GamepadEvent;
+import org.asmus.model.TriggerPosition;
 import org.asmus.qualifier.impl.AutoLongClickQualifier;
 import org.asmus.qualifier.impl.ImmediateQualifier;
 import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
@@ -18,11 +21,9 @@ import org.asmus.tool.AxisMapper;
 import org.asmus.tool.EventMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -60,6 +61,7 @@ public class IntrospectedEventFactory {
 
     Consumer<ButtonClick> qualify = c -> behaviours.forEach(q -> Optional.ofNullable(c)
             .map(q.getIntrospector()::translate)
+//            .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents()))
             .ifPresent(q.getQualifier().useStream(qualifiedEventStream)::qualify));
 
     public OsDevice getButtonStream() {
@@ -84,7 +86,6 @@ public class IntrospectedEventFactory {
                     .toList();
 
             Flux.merge(Flux.fromIterable(vertical), Flux.fromIterable(horizontal))
-                    .map(q -> q.withQualified(EQualificationType.ARROW))
                     .map(q -> q.withModifiers(
                             MODIFIER.getIntrospector().getModifiersResetEvents().stream()
                                     .map(EButtonAxisMapping::getByMappingName)
@@ -169,7 +170,35 @@ public class IntrospectedEventFactory {
         });
     }
 
+    Map<EButtonAxisMapping, Set<EButtonAxisMapping>> triggerModifierMap = new HashMap<>();
+    Set<EButtonAxisMapping> modifiers = new HashSet<>();
+
     public Flux<GamepadEvent> getButtonEventStream() {
-        return qualifiedEventStream.asFlux();
+        return qualifiedEventStream.asFlux()
+                .filter(q -> {
+                            Set<EButtonAxisMapping> m = Optional.ofNullable(q.getModifiers())
+                                    .orElse(Set.of());
+
+//                            Set<EButtonAxisMapping> mods = triggerModifierMap.remove(q.getType());
+
+
+//                    System.out.println("modifiers: " + m);Set.of()
+
+                            if (modifiers.isEmpty() && m.isEmpty()) return true;
+
+                            q.getModifiers().addAll(modifiers);
+
+                            boolean b = modifiers.isEmpty() ?
+                                    modifiers.addAll(m) : !modifiers.remove(q.getType());
+
+//                            triggerModifierMap.remove()
+
+//                    System.out.println("result: " + b);
+
+                            return b;
+                        }
+                )
+                .publishOn(Schedulers.parallel())
+                ;
     }
 }

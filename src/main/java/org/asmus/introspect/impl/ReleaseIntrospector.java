@@ -14,9 +14,7 @@ import java.util.stream.Collectors;
 @Value
 public class ReleaseIntrospector extends BaseIntrospector {
 
-    Set<String> modifiers = new HashSet<>();
 
-    Predicate<ButtonClick> notModifier = q -> !modifiers.remove(q.getPush().getName());
     Predicate<ButtonClick> buttonWasPressedAndReleased = buttonWasPressed.and(buttonWasReleased);
 
     @SneakyThrows
@@ -33,5 +31,9 @@ public class ReleaseIntrospector extends BaseIntrospector {
                 .map(TimedValue::getName)
                 .peek(modifiers::add) // adding holding button as a modifier will later reset them by `notModifier` predicate
                 .collect(Collectors.toSet());
+    }
+
+    public Set<String> getModifiers() {
+        return modifiers;
     }
 }

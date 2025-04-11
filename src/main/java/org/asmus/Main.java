@@ -7,6 +7,7 @@ import org.asmus.builder.IntrospectedEventFactory;
 import org.asmus.builder.closure.button.OsDevice;
 import org.asmus.builder.closure.button.RawArrowSource;
 import org.asmus.introspect.impl.ReleaseIntrospector;
+import org.asmus.model.EQualificationType;
 import org.asmus.qualifier.impl.MultiplicityQualifier;
 
 
@@ -37,6 +38,7 @@ public class Main {
 
         // subscribe to all events
         gamepadEventSourceBuilder.getButtonEventStream()
+                .filter(q -> q.getQualified() == EQualificationType.MULTIPLE)
                 .log()
                 .subscribe();
 

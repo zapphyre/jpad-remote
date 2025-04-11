@@ -41,6 +41,16 @@ public enum EButtonAxisMapping {
     final String mapping;
     final boolean analog;
 
+    public static EButtonAxisMapping getByEnumName(String name) {
+        for (EButtonAxisMapping mapping : values()) {
+            if (mapping.name().equalsIgnoreCase(name)) {
+                return mapping;
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown button axis " + name);
+    }
+
     public static EButtonAxisMapping getByMappingName(final String name) {
         for (EButtonAxisMapping value : EButtonAxisMapping.values()) {
             if (value.mapping.equals(name))

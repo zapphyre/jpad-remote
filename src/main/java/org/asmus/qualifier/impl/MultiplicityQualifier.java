@@ -3,10 +3,7 @@ package org.asmus.qualifier.impl;
 import lombok.RequiredArgsConstructor;
 import org.asmus.model.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
@@ -17,11 +14,14 @@ import java.util.stream.Collectors;
 public class MultiplicityQualifier extends BaseQualifier {
 
     Map<ButtonEvent, TimeFuture> timingFutureMap = new HashMap<>();
+    Set<EButtonAxisMapping> modifiers = new HashSet<>();
 
     void propagateEvent(ButtonEvent evt) {
         Optional.ofNullable(evt)
                 .map(timingFutureMap::remove)
                 .map(this::map)
+                .filter(q -> !modifiers.removeAll(q.getModifiers()))
+                .filter(q -> modifiers.addAll(q.getModifiers()))
                 .ifPresent(qualifiedEventStream::tryEmitNext);
     }
 
@@ -81,6 +81,7 @@ public class MultiplicityQualifier extends BaseQualifier {
     GamepadEvent map(TimeFuture tf) {
         return GamepadEvent.builder()
                 .multiplicity(EMultiplicity.getByClickCount(tf.multiplicity))
+                .modifiers(tf.evt.getModifiers().stream().map(EButtonAxisMapping::getByMappingName).collect(Collectors.toSet()))
                 .eventName(tf.evt.getName())
                 .type(EButtonAxisMapping.getByMappingName(tf.evt.getName()))
                 .longPress(tf.longClick)
@@ -92,6 +93,7 @@ public class MultiplicityQualifier extends BaseQualifier {
         return ButtonEvent.builder()
                 .name(click.getPush().getName())
                 .release(click.getPush().isValue())
+                .modifiers(click.getModifiers())
                 .build();
     }
 

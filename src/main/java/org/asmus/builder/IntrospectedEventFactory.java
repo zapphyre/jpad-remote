@@ -9,10 +9,7 @@ import org.asmus.introspect.impl.BothIntrospector;
 import org.asmus.introspect.impl.PushIntrospector;
 import org.asmus.introspect.impl.ReleaseIntrospector;
 import org.asmus.mapper.GamepadStateMapper;
-import org.asmus.model.ButtonClick;
-import org.asmus.model.EButtonAxisMapping;
-import org.asmus.model.GamepadEvent;
-import org.asmus.model.TriggerPosition;
+import org.asmus.model.*;
 import org.asmus.qualifier.impl.AutoLongClickQualifier;
 import org.asmus.qualifier.impl.ImmediateQualifier;
 import org.asmus.qualifier.impl.ModifierAndLongPressQualifier;
@@ -174,21 +171,7 @@ public class IntrospectedEventFactory {
     List<EButtonAxisMapping> modifiers = new LinkedList<>();
 
     public Flux<GamepadEvent> getButtonEventStream() {
-        return qualifiedEventStream.asFlux()
-                .filter(q -> {
-                            Set<EButtonAxisMapping> m = Optional.ofNullable(q.getModifiers())
-                                    .orElse(Set.of());
-
-                            if (modifiers.isEmpty() && m.isEmpty()) return true;
-
-                            q.getModifiers().addAll(modifiers);
-
-                    return modifiers.isEmpty() ?
-                            modifiers.addAll(twice(m)) : !modifiers.remove(q.getType());
-                        }
-                )
-                .publishOn(Schedulers.parallel())
-                ;
+        return qualifiedEventStream.asFlux();
     }
 
     List<EButtonAxisMapping> twice(Set<EButtonAxisMapping> m) {

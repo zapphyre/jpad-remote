@@ -13,5 +13,5 @@ public class ButtonEvent {
     @EqualsAndHashCode.Include
     String name;
     boolean release;
-    Set<EButtonAxisMapping> modifiers;
+    Set<String> modifiers;
 }

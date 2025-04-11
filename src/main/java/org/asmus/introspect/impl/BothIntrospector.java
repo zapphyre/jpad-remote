@@ -4,7 +4,6 @@ import lombok.Value;
 import org.asmus.model.ButtonClick;
 import org.asmus.model.TimedValue;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Value
@@ -15,12 +14,10 @@ public class BothIntrospector extends BaseIntrospector {
     public ButtonClick translate(ButtonClick buttonClick) {
         boolean press = buttonWasPressed.test(buttonClick);
         boolean release = buttonWasReleased.test(buttonClick);
-
         boolean notMod = notModifier.test(buttonClick);
 
-        if (release)
-            return buttonClick.withModifiers(holding.stream().map(TimedValue::getName).collect(Collectors.toSet()));
-
-        return buttonClick;
+        return release ?
+                buttonClick.withModifiers(holding.stream().map(TimedValue::getName).collect(Collectors.toSet())) :
+                buttonClick;
     }
 }

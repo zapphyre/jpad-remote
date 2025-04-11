@@ -38,7 +38,6 @@ public class Main {
 
         // subscribe to all events
         gamepadEventSourceBuilder.getButtonEventStream()
-                .filter(q -> q.getQualified() == EQualificationType.MULTIPLE)
                 .log()
                 .subscribe();
 

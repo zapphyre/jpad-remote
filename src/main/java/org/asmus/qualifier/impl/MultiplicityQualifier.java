@@ -20,8 +20,8 @@ public class MultiplicityQualifier extends BaseQualifier {
         Optional.ofNullable(evt)
                 .map(timingFutureMap::remove)
                 .map(this::map)
-                .filter(q -> !modifiers.removeAll(q.getModifiers()))
-                .filter(q -> modifiers.addAll(q.getModifiers()))
+                .filter(q -> modifiers.isEmpty() || !modifiers.removeAll(Set.of(q.getType())))
+                .filter(q -> q.getModifiers().isEmpty() || modifiers.addAll(q.getModifiers()))
                 .ifPresent(qualifiedEventStream::tryEmitNext);
     }
 

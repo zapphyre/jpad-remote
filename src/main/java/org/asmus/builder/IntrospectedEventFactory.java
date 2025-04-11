@@ -167,9 +167,6 @@ public class IntrospectedEventFactory {
         });
     }
 
-    Map<EButtonAxisMapping, Set<EButtonAxisMapping>> triggerModifierMap = new HashMap<>();
-    List<EButtonAxisMapping> modifiers = new LinkedList<>();
-
     public Flux<GamepadEvent> getButtonEventStream() {
         return qualifiedEventStream.asFlux();
     }

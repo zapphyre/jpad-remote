@@ -1,6 +1,7 @@
 package org.asmus.digitizer;
 
 import lombok.RequiredArgsConstructor;
+import org.asmus.model.ELogicalEventType;
 import org.asmus.model.GamepadEvent;
 import org.asmus.model.TriggerPosition;
 import reactor.core.publisher.Sinks;
@@ -23,15 +24,24 @@ public class RangeDigitizer {
 
             int currentSegment = processInput(q.getPosition());
 
-            if (lastSegmentIndex != -1 && lastSegmentIndex != currentSegment) {
-                System.out.println("Boundary crossed: from segment " + lastSegmentIndex + " to " + currentSegment);
-            }
+            ELogicalEventType type = ELogicalEventType.STEP_NEGATIVE;
+
+            if (currentSegment > lastSegmentIndex)
+                type = ELogicalEventType.STEP_POSITIVE;
+
+            if (lastSegmentIndex != -1 && lastSegmentIndex != currentSegment)
+                qualifiedEventStream.tryEmitNext(GamepadEvent.builder()
+                        .logicalEventType(type)
+                        .type(q.getType())
+                        .modifiers(q.getModifiers())
+                        .build());
 
             lastSegmentIndex = currentSegment;
         };
     }
 
     private final long segmentSize = range / numSegments;
+
     int processInput(int value) {
         int segmentIndex;
         if (value == MAX) {

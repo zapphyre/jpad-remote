@@ -12,4 +12,7 @@ public interface NamingConstants {
 
     String ARROW_X = "arrowx";
     String ARROW_Y = "arrowy";
+
+    int MAX = 32767;
+    int MIN = -32767;
 }

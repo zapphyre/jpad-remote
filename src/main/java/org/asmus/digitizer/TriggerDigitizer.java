@@ -8,12 +8,14 @@ import reactor.core.publisher.Sinks;
 
 import java.util.function.Consumer;
 
+import static org.asmus.model.NamingConstants.MAX;
+import static org.asmus.model.NamingConstants.MIN;
+
 @RequiredArgsConstructor
 public class TriggerDigitizer {
 
     private final long QUICK_MS = 210;
-    public static final int MAX = 32767;
-    public static final int MIN = -32767;
+
     private ELogicalEventType last;
 
     private final Sinks.Many<GamepadEvent> qualifiedEventStream;

@@ -29,6 +29,7 @@ public class Main {
         RawArrowSource arrowsStream = gamepadEventSourceBuilder.getArrowsStream();
         RawArrowSource triggerStream = gamepadEventSourceBuilder.rightTriggerStream();
         RawArrowSource triggerLeft = gamepadEventSourceBuilder.leftTriggerStream();
+        RawArrowSource triggerRangeDigi = gamepadEventSourceBuilder.leftDigitizedRangeTriggerStream();
 
         eventProducer.getWorker().getButtonStream()
                 .subscribe(buttonProcessor::processButtonEvents);
@@ -36,15 +37,21 @@ public class Main {
         eventProducer.getWorker().getAxisStream()
                 .subscribe(arrowsStream::processArrowEvents);
 
+        eventProducer.getWorker().getAxisStream()
+                        .subscribe(triggerStream::processArrowEvents);
+
+        eventProducer.getWorker().getAxisStream()
+                        .subscribe(triggerRangeDigi::processArrowEvents);
+
         // subscribe to all events
         gamepadEventSourceBuilder.getButtonEventStream()
                 .log()
                 .subscribe();
 
-//        eventProducer.getWorker().getAxisStream()
-//                .subscribe(gamepadEventSourceBuilder.leftStickStream()::processArrowEvents);
-//        eventProducer.getWorker().getAxisStream()
-//                .subscribe(gamepadEventSourceBuilder.rightStickStream()::processArrowEvents);
+        eventProducer.getWorker().getAxisStream()
+                .subscribe(gamepadEventSourceBuilder.leftStickStream()::processArrowEvents);
+        eventProducer.getWorker().getAxisStream()
+                .subscribe(gamepadEventSourceBuilder.rightStickStream()::processArrowEvents);
 
 //        osConnector.getButtonStream()
 //                .subscribe(System.out::println);

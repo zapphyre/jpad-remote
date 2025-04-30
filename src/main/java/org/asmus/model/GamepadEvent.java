@@ -22,5 +22,5 @@ public class GamepadEvent {
     ELogicalEventType logicalEventType;
 
     @Builder.Default
-    EQualificationType qualified = EQualificationType.MULTIPLE;
+    EQualificationType qualified = EQualificationType.PUSH;
 }

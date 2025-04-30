@@ -40,8 +40,11 @@ public class Main {
         eventProducer.getWorker().getAxisStream()
                         .subscribe(triggerStream::processArrowEvents);
 
+//        eventProducer.getWorker().getAxisStream()
+//                        .subscribe(triggerRangeDigi::processArrowEvents);
+
         eventProducer.getWorker().getAxisStream()
-                        .subscribe(triggerRangeDigi::processArrowEvents);
+                        .subscribe(triggerLeft::processArrowEvents);
 
         // subscribe to all events
         gamepadEventSourceBuilder.getButtonEventStream()

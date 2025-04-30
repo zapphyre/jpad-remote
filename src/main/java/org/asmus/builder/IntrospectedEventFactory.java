@@ -156,8 +156,7 @@ public class IntrospectedEventFactory {
                         .build())
                 .map(p -> p.withModifiers(MODIFIER.getIntrospector().getModifiersResetEvents().stream()
                         .map(EButtonAxisMapping::getByMappingName)
-                        .collect(Collectors.toSet())
-                ))
+                        .collect(Collectors.toSet())))
                 .forEach(digitizer.digitize());
     }
 
@@ -187,17 +186,11 @@ public class IntrospectedEventFactory {
 
             int pos = p.getValue();
 
-//            return pos > 0 ? pos > prev : pos < prev;
-
             return prev != pos;
         });
     }
 
     public Flux<GamepadEvent> getButtonEventStream() {
         return qualifiedEventStream.asFlux();
-    }
-
-    List<EButtonAxisMapping> twice(Set<EButtonAxisMapping> m) {
-        return Stream.of(m, m).flatMap(Collection::stream).toList();
     }
 }

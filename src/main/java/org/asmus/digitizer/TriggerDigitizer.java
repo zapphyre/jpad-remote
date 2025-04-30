@@ -2,6 +2,7 @@ package org.asmus.digitizer;
 
 import lombok.RequiredArgsConstructor;
 import org.asmus.model.ELogicalEventType;
+import org.asmus.model.EQualificationType;
 import org.asmus.model.GamepadEvent;
 import org.asmus.model.TriggerPosition;
 import reactor.core.publisher.Sinks;
@@ -30,6 +31,7 @@ public class TriggerDigitizer {
                     .logicalEventType(last = current.getLogicalType())
                     .type(q.getType())
                     .modifiers(q.getModifiers())
+                    .qualified(EQualificationType.MULTIPLE)
                     .build());
         };
     }
